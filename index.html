@@ -34,26 +34,32 @@
   }
   .wrap{max-width:680px;margin:0 auto;}
 
-  /* ---------- Header ---------- */
+  /* ---------- Header (dreamy pastel) ---------- */
   .cover{
-    background:linear-gradient(160deg, #7A2748 0%, #D6477A 55%, #7A2748 100%);
-    color:#FFF3F8;
+    background:linear-gradient(135deg, #FDF1F6 0%, #FAE0EE 45%, #F3D6EC 100%);
+    color:var(--ink);
     border-radius:18px;
     padding:28px 26px 24px;
     position:relative;
     overflow:hidden;
-    box-shadow:0 14px 30px -14px rgba(122,39,72,.55);
+    box-shadow:0 14px 30px -18px rgba(195,140,180,.45);
   }
-  .cover::before{
+  .cover::before, .cover::after{
     content:"";
-    position:absolute; inset:0;
-    background-image:radial-gradient(circle at 85% 15%, rgba(255,210,228,.22), transparent 55%);
+    position:absolute;
+    border-radius:50%;
+    filter:blur(28px);
+    opacity:.6;
+    pointer-events:none;
   }
+  .cover::before{ width:170px; height:170px; background:#FFE1F0; top:-70px; right:-50px; }
+  .cover::after{ width:130px; height:130px; background:#E3D6FA; bottom:-55px; left:-30px; }
+  .cover-inner{position:relative; z-index:1;}
   .cover .eyebrow{
     font-family:'JetBrains Mono', monospace;
     letter-spacing:.18em;
     font-size:11px;
-    color:#FFD3E2;
+    color:#C684A6;
     text-transform:uppercase;
   }
   .cover h1{
@@ -62,30 +68,28 @@
     font-size:30px;
     margin:6px 0 4px;
     letter-spacing:.04em;
+    color:#7A3A58;
   }
   .cover .reset-note{
     font-size:11.5px;
-    color:#FFE0EC;
+    color:#A8728F;
     margin-bottom:16px;
-    position:relative; z-index:1;
   }
   .cover .stats{
     display:flex;
     gap:16px;
     flex-wrap:wrap;
-    position:relative;
-    z-index:1;
   }
   .stat-block{flex:1;min-width:110px;}
-  .stat-label{font-size:11.5px;color:#FFD3E2;margin-bottom:4px;}
+  .stat-label{font-size:11.5px;color:#C087A6;margin-bottom:4px;}
   .stat-value{
     font-family:'JetBrains Mono', monospace;
     font-weight:700;
     font-size:22px;
-    color:#FFFFFF;
+    color:#7A3A58;
   }
   .stat-value.small{font-size:17px;}
-  .stat-value.penalty-stat{color:#FFC4D4;}
+  .stat-value.penalty-stat{color:#B5536F;}
 
   /* ---------- Section header ---------- */
   .section-title{
@@ -93,6 +97,8 @@
     align-items:baseline;
     justify-content:space-between;
     margin:30px 0 12px;
+    flex-wrap:wrap;
+    gap:10px;
   }
   .section-title h2{
     font-family:'Noto Serif TC', serif;
@@ -135,18 +141,33 @@
     align-items:flex-start;
     gap:10px;
   }
+  .name-swatch{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:22px;height:22px;
+    border-radius:50%;
+    font-size:11px;
+    color:#fff;
+    margin-right:7px;
+    vertical-align:middle;
+    flex-shrink:0;
+  }
   .item-name{
     font-family:'Noto Serif TC', serif;
     font-weight:700;
     font-size:17px;
     color:var(--ink);
+    display:inline-flex;
+    align-items:center;
   }
   .item-rule{
     font-size:11.5px;
     color:var(--ink-soft);
-    margin-top:3px;
+    margin-top:5px;
     font-family:'JetBrains Mono', monospace;
     line-height:1.6;
+    padding-left:29px;
   }
   .item-actions{display:flex; gap:6px;}
   .icon-btn{
@@ -236,7 +257,6 @@
     cursor:default;
   }
 
-  /* thumbs-up stamp animation */
   .stamp-mark{
     position:absolute;
     top:14px; right:16px;
@@ -266,6 +286,109 @@
     font-size:14px;
     border:1.5px dashed var(--line);
     border-radius:14px;
+  }
+
+  /* ---------- Calendar ---------- */
+  .calendar-section{margin-top:36px;}
+  .cal-card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:18px;
+  }
+  .cal-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:14px;
+    flex-wrap:wrap;
+    gap:10px;
+  }
+  .cal-nav{display:flex; align-items:center; gap:10px;}
+  .cal-nav button{
+    background:#FFF6FA;
+    border:1px solid var(--line);
+    border-radius:8px;
+    width:30px;height:30px;
+    cursor:pointer;
+    color:var(--primary-dark);
+    font-size:14px;
+  }
+  .cal-title{
+    font-family:'Noto Serif TC', serif;
+    font-weight:700;
+    font-size:16px;
+    min-width:96px;
+    text-align:center;
+  }
+  .cal-filter-wrap{position:relative;}
+  .cal-filter-btn{
+    background:#FFF6FA;
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:8px 12px;
+    font-size:12.5px;
+    cursor:pointer;
+    color:var(--ink);
+    font-family:'Noto Sans TC',sans-serif;
+  }
+  .cal-filter-panel{
+    position:absolute;
+    right:0; top:calc(100% + 6px);
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:12px;
+    width:230px;
+    box-shadow:0 16px 32px -12px rgba(122,39,72,.28);
+    display:none;
+    z-index:30;
+  }
+  .cal-filter-panel.open{display:block;}
+  .cal-filter-actions{display:flex; gap:8px; margin-bottom:8px;}
+  .cal-filter-actions button{
+    flex:1; font-size:11px; padding:5px;
+    border-radius:6px; border:1px solid var(--line);
+    background:#FFF6FA; cursor:pointer; color:var(--ink-soft);
+  }
+  .cal-filter-list{max-height:220px; overflow-y:auto;}
+  .cal-filter-item{
+    display:flex; align-items:center; gap:8px;
+    padding:6px 2px; font-size:12.5px; cursor:pointer;
+  }
+  .cal-filter-item input{margin:0;}
+  .cal-swatch{
+    width:16px;height:16px;border-radius:50%;
+    flex-shrink:0; display:flex; align-items:center; justify-content:center;
+    font-size:9px; color:#fff;
+  }
+  .cal-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:5px;}
+  .cal-weekday{
+    text-align:center; font-size:11px; color:var(--ink-soft);
+    padding-bottom:4px; font-family:'JetBrains Mono',monospace;
+  }
+  .cal-day{
+    background:#FFFAFC;
+    border:1px solid var(--line);
+    border-radius:8px;
+    min-height:54px;
+    padding:4px 3px;
+    display:flex;
+    flex-direction:column;
+    gap:3px;
+  }
+  .cal-day.empty{background:transparent; border:none;}
+  .cal-day.today{border:1.5px solid var(--primary);}
+  .cal-daynum{font-size:10.5px; color:var(--ink-soft); font-family:'JetBrains Mono',monospace;}
+  .cal-badges{display:flex; flex-wrap:wrap; gap:2px;}
+  .cal-badge{
+    width:16px;height:16px;border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:9px; color:#fff; line-height:1;
+  }
+  .cal-empty-note{
+    text-align:center; font-size:12.5px; color:var(--ink-soft);
+    padding:30px 10px;
   }
 
   /* ---------- Modal ---------- */
@@ -313,6 +436,7 @@
     color:var(--ink);
     font-family:'Noto Sans TC',sans-serif;
   }
+  .field input[type=color]{padding:4px; height:40px;}
   .field input:focus{outline:2px solid var(--primary); outline-offset:1px;}
   .field-row{display:flex; gap:10px;}
   .field-row .field{flex:1;}
@@ -347,6 +471,7 @@
   @media (max-width:480px){
     .cover h1{font-size:24px;}
     .stat-value{font-size:19px;}
+    .cal-day{min-height:46px;}
   }
 </style>
 </head>
@@ -354,25 +479,27 @@
 <div class="wrap">
 
   <div class="cover">
-    <div class="eyebrow">DAILY CHECK-IN PASSBOOK</div>
-    <h1>簽到存摺</h1>
-    <div class="reset-note">每日凌晨 4:00 結算前一日狀況，未簽到將自動扣款</div>
-    <div class="stats">
-      <div class="stat-block">
-        <div class="stat-label">總累積金額</div>
-        <div class="stat-value" id="totalMoney">$0</div>
-      </div>
-      <div class="stat-block">
-        <div class="stat-label">今日已簽到</div>
-        <div class="stat-value small" id="todayCount">0 / 0</div>
-      </div>
-      <div class="stat-block">
-        <div class="stat-label">累計簽到次數</div>
-        <div class="stat-value small" id="totalCheckins">0</div>
-      </div>
-      <div class="stat-block">
-        <div class="stat-label">累計扣款</div>
-        <div class="stat-value small penalty-stat" id="totalPenalty">$0</div>
+    <div class="cover-inner">
+      <div class="eyebrow">DAILY CHECK-IN PASSBOOK</div>
+      <h1>簽到存摺</h1>
+      <div class="reset-note">每日凌晨 4:00 結算前一日狀況，未簽到將自動扣款</div>
+      <div class="stats">
+        <div class="stat-block">
+          <div class="stat-label">總累積金額</div>
+          <div class="stat-value" id="totalMoney">$0</div>
+        </div>
+        <div class="stat-block">
+          <div class="stat-label">今日已簽到</div>
+          <div class="stat-value small" id="todayCount">0 / 0</div>
+        </div>
+        <div class="stat-block">
+          <div class="stat-label">累計簽到次數</div>
+          <div class="stat-value small" id="totalCheckins">0</div>
+        </div>
+        <div class="stat-block">
+          <div class="stat-label">累計扣款</div>
+          <div class="stat-value small penalty-stat" id="totalPenalty">$0</div>
+        </div>
       </div>
     </div>
   </div>
@@ -387,7 +514,36 @@
 
   <div class="items" id="itemsList"></div>
 
-  <footer class="note">資料儲存在你的帳號中，僅你自己可見。金額、獎勵與扣款規則皆可自由編輯。</footer>
+  <div class="calendar-section">
+    <div class="section-title">
+      <div>
+        <h2>月曆紀錄</h2>
+        <div class="sub">查看每天完成了哪些項目</div>
+      </div>
+    </div>
+    <div class="cal-card">
+      <div class="cal-header">
+        <div class="cal-nav">
+          <button id="calPrev">◀</button>
+          <div class="cal-title" id="calTitle">2026年6月</div>
+          <button id="calNext">▶</button>
+        </div>
+        <div class="cal-filter-wrap">
+          <button class="cal-filter-btn" id="calFilterBtn">顯示項目 ▾</button>
+          <div class="cal-filter-panel" id="calFilterPanel">
+            <div class="cal-filter-actions">
+              <button id="calSelectAll">全選</button>
+              <button id="calSelectNone">取消全選</button>
+            </div>
+            <div class="cal-filter-list" id="calFilterList"></div>
+          </div>
+        </div>
+      </div>
+      <div id="calBody"></div>
+    </div>
+  </div>
+
+  <footer class="note">資料會自動儲存在你的裝置／帳號中，重新整理或更新頁面也不會消失。金額、獎勵、扣款與顯示樣式皆可自由編輯。</footer>
 </div>
 
 <!-- Modal -->
@@ -397,6 +553,16 @@
     <div class="field">
       <label for="fName">項目名稱</label>
       <input type="text" id="fName" placeholder="例如：每日喝水、閱讀 30 分鐘">
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label for="fIcon">圖標／文字</label>
+        <input type="text" id="fIcon" placeholder="例如：💧 或 讀" maxlength="4">
+      </div>
+      <div class="field">
+        <label for="fColor">顏色</label>
+        <input type="color" id="fColor" value="#E85C8A">
+      </div>
     </div>
     <div class="field">
       <label for="fPer">每次簽到獲得金額（元）</label>
@@ -431,8 +597,39 @@
 <script>
 (function(){
   const STORAGE_KEY = 'checkin-passbook-items';
+  const CAL_KEY = 'checkin-passbook-calendar-selected';
   let items = [];
   let editingId = null;
+  let calSelected = [];
+
+  const ICON_ROTATION = ['💧','📘','💪','✨','🎯','🌙','🍀','🎨'];
+  const COLOR_ROTATION = ['#A6C2F2','#C9A6F2','#F2C49A','#F2A6C6','#A6E0CB','#F2E2A6','#A6D8F2','#E3B6F2'];
+
+  // ---- storage abstraction: uses Claude's secure storage when available,
+  // falls back to localStorage when the page is opened outside Claude.ai
+  // (e.g. saved/opened directly as a file in a mobile browser). ----
+  const hasClaudeStorage = typeof window.storage !== 'undefined'
+    && typeof window.storage.get === 'function'
+    && typeof window.storage.set === 'function';
+
+  async function storageGet(key){
+    if(hasClaudeStorage){
+      try{ return await window.storage.get(key, false); }
+      catch(e){ return null; }
+    }
+    try{
+      const raw = localStorage.getItem(key);
+      return raw !== null ? { value: raw } : null;
+    } catch(e){ return null; }
+  }
+  async function storageSet(key, value){
+    if(hasClaudeStorage){
+      try{ return await window.storage.set(key, value, false); }
+      catch(e){ return null; }
+    }
+    try{ localStorage.setItem(key, value); return { value }; }
+    catch(e){ return null; }
+  }
 
   // ---- date helpers (day resets at 04:00) ----
   function formatDate(dt){
@@ -460,25 +657,32 @@
     const rounded = Math.round(n * 100) / 100;
     return sign + '$' + rounded.toLocaleString('en-US', {minimumFractionDigits: (rounded % 1 === 0 ? 0 : 2), maximumFractionDigits:2});
   }
+  function escapeHtml(str){
+    const d = document.createElement('div');
+    d.textContent = str;
+    return d.innerHTML;
+  }
 
   function defaultItems(eff){
     return [
-      { id: uid(), name: '每日喝水提醒', perCheckin: 5, milestoneCount: 7, milestoneBonus: 20, penaltyPerMiss: 2, checkins: [], missed: [], lastSettledDate: eff },
-      { id: uid(), name: '閱讀 30 分鐘', perCheckin: 10, milestoneCount: 7, milestoneBonus: 50, penaltyPerMiss: 0, checkins: [], missed: [], lastSettledDate: eff },
-      { id: uid(), name: '運動健身', perCheckin: 15, milestoneCount: 30, milestoneBonus: 200, penaltyPerMiss: 5, checkins: [], missed: [], lastSettledDate: eff }
+      { id: uid(), name: '每日喝水提醒', icon:'💧', color:'#A6C2F2', perCheckin: 5, milestoneCount: 7, milestoneBonus: 20, penaltyPerMiss: 2, checkins: [], missed: [], lastSettledDate: eff },
+      { id: uid(), name: '閱讀 30 分鐘', icon:'📘', color:'#C9A6F2', perCheckin: 10, milestoneCount: 7, milestoneBonus: 50, penaltyPerMiss: 0, checkins: [], missed: [], lastSettledDate: eff },
+      { id: uid(), name: '運動健身', icon:'💪', color:'#F2C49A', perCheckin: 15, milestoneCount: 30, milestoneBonus: 200, penaltyPerMiss: 5, checkins: [], missed: [], lastSettledDate: eff }
     ];
   }
 
   async function loadData(){
     const eff = getEffectiveDateStr(new Date());
     try{
-      const res = await window.storage.get(STORAGE_KEY, false);
+      const res = await storageGet(STORAGE_KEY);
       if(res && res.value){
         items = JSON.parse(res.value);
-        items.forEach(it => {
+        items.forEach((it, idx) => {
           if(it.missed === undefined) it.missed = [];
           if(it.penaltyPerMiss === undefined || it.penaltyPerMiss === null) it.penaltyPerMiss = 0;
-          if(!it.lastSettledDate) it.lastSettledDate = eff; // avoid retroactive penalty on migration
+          if(!it.lastSettledDate) it.lastSettledDate = eff;
+          if(!it.icon) it.icon = ICON_ROTATION[idx % ICON_ROTATION.length];
+          if(!it.color) it.color = COLOR_ROTATION[idx % COLOR_ROTATION.length];
         });
       } else {
         items = defaultItems(eff);
@@ -489,8 +693,19 @@
 
     let changed = false;
     items.forEach(it => { if(settleItem(it, eff)) changed = true; });
-    if(changed || true) await saveData(); // persist migrations/settlement
+    await saveData();
+
+    const calRes = await storageGet(CAL_KEY);
+    if(calRes && calRes.value){
+      try{ calSelected = JSON.parse(calRes.value); } catch(e){ calSelected = items.map(i => i.id); }
+    } else {
+      calSelected = items.map(i => i.id);
+    }
+    // make sure any newly-seen items are included by default
+    items.forEach(it => { if(!calSelected.includes(it.id)) calSelected.push(it.id); });
+
     render();
+    renderCalendar();
   }
 
   function settleItem(item, effectiveToday){
@@ -512,13 +727,8 @@
     return changed;
   }
 
-  async function saveData(){
-    try{
-      await window.storage.set(STORAGE_KEY, JSON.stringify(items), false);
-    } catch(e){
-      console.error('儲存失敗', e);
-    }
-  }
+  async function saveData(){ await storageSet(STORAGE_KEY, JSON.stringify(items)); }
+  async function saveCalSelection(){ await storageSet(CAL_KEY, JSON.stringify(calSelected)); }
 
   function calcItemStats(item){
     const count = item.checkins.length;
@@ -602,7 +812,7 @@
         <div class="stamp-mark" data-stamp>👍</div>
         <div class="item-top">
           <div>
-            <div class="item-name">${escapeHtml(item.name)}</div>
+            <div class="item-name"><span class="name-swatch" style="background:${item.color}">${escapeHtml(item.icon)}</span>${escapeHtml(item.name)}</div>
             <div class="item-rule">每次 +${item.perCheckin} 元 ・ ${milestoneText}${penaltyText}</div>
           </div>
           <div class="item-actions">
@@ -639,22 +849,16 @@
     });
   }
 
-  function escapeHtml(str){
-    const d = document.createElement('div');
-    d.textContent = str;
-    return d.innerHTML;
-  }
-
   async function doCheckin(id, btnEl){
     const item = items.find(i => i.id === id);
     if(!item) return;
     const eff = getEffectiveDateStr(new Date());
     if(item.checkins.includes(eff)) return;
     item.checkins.push(eff);
-    // if today was already marked missed somehow (clock edge case), undo it
     item.missed = (item.missed || []).filter(d => d !== eff);
     await saveData();
     render();
+    renderCalendar();
 
     const newCard = Array.from(document.querySelectorAll('.item')).find(c => c.querySelector(`[data-checkin="${id}"]`));
     if(newCard){
@@ -663,10 +867,129 @@
     }
   }
 
+  // ---------- Calendar ----------
+  let calYear, calMonth; // calMonth: 0-indexed
+  (function initCalDate(){
+    const now = new Date();
+    calYear = now.getFullYear();
+    calMonth = now.getMonth();
+  })();
+
+  function renderCalendar(){
+    const titleEl = document.getElementById('calTitle');
+    titleEl.textContent = `${calYear}年${calMonth + 1}月`;
+
+    const body = document.getElementById('calBody');
+    const visibleItems = items.filter(it => calSelected.includes(it.id));
+
+    if(items.length === 0){
+      body.innerHTML = '<div class="cal-empty-note">尚無簽到項目，新增項目後即可在月曆看到紀錄</div>';
+      renderCalFilterList();
+      return;
+    }
+
+    const weekdayNames = ['日','一','二','三','四','五','六'];
+    let html = '<div class="cal-grid">';
+    weekdayNames.forEach(w => { html += `<div class="cal-weekday">${w}</div>`; });
+
+    const firstDay = new Date(calYear, calMonth, 1);
+    const startWeekday = firstDay.getDay();
+    const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+    const todayStr = formatDate(new Date());
+
+    for(let i = 0; i < startWeekday; i++){
+      html += '<div class="cal-day empty"></div>';
+    }
+
+    for(let day = 1; day <= daysInMonth; day++){
+      const dt = new Date(calYear, calMonth, day, 12, 0, 0);
+      const ds = formatDate(dt);
+      const isToday = ds === todayStr;
+      let badges = '';
+      visibleItems.forEach(it => {
+        if(it.checkins.includes(ds)){
+          badges += `<div class="cal-badge" style="background:${it.color}" title="${escapeHtml(it.name)}">${escapeHtml(it.icon)}</div>`;
+        }
+      });
+      html += `<div class="cal-day ${isToday ? 'today' : ''}">
+          <div class="cal-daynum">${day}</div>
+          <div class="cal-badges">${badges}</div>
+        </div>`;
+    }
+
+    html += '</div>';
+    body.innerHTML = html;
+
+    renderCalFilterList();
+  }
+
+  function renderCalFilterList(){
+    const listEl = document.getElementById('calFilterList');
+    listEl.innerHTML = '';
+    items.forEach(it => {
+      const row = document.createElement('label');
+      row.className = 'cal-filter-item';
+      const checked = calSelected.includes(it.id);
+      row.innerHTML = `
+        <input type="checkbox" data-cal-toggle="${it.id}" ${checked ? 'checked' : ''}>
+        <span class="cal-swatch" style="background:${it.color}">${escapeHtml(it.icon)}</span>
+        <span>${escapeHtml(it.name)}</span>
+      `;
+      listEl.appendChild(row);
+    });
+    listEl.querySelectorAll('[data-cal-toggle]').forEach(cb => {
+      cb.addEventListener('change', async () => {
+        const id = cb.getAttribute('data-cal-toggle');
+        if(cb.checked){
+          if(!calSelected.includes(id)) calSelected.push(id);
+        } else {
+          calSelected = calSelected.filter(x => x !== id);
+        }
+        await saveCalSelection();
+        renderCalendar();
+      });
+    });
+  }
+
+  document.getElementById('calPrev').addEventListener('click', () => {
+    calMonth--;
+    if(calMonth < 0){ calMonth = 11; calYear--; }
+    renderCalendar();
+  });
+  document.getElementById('calNext').addEventListener('click', () => {
+    calMonth++;
+    if(calMonth > 11){ calMonth = 0; calYear++; }
+    renderCalendar();
+  });
+
+  const calFilterBtn = document.getElementById('calFilterBtn');
+  const calFilterPanel = document.getElementById('calFilterPanel');
+  calFilterBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    calFilterPanel.classList.toggle('open');
+  });
+  document.addEventListener('click', (e) => {
+    if(!calFilterPanel.contains(e.target) && e.target !== calFilterBtn){
+      calFilterPanel.classList.remove('open');
+    }
+  });
+  document.getElementById('calSelectAll').addEventListener('click', async () => {
+    calSelected = items.map(i => i.id);
+    await saveCalSelection();
+    renderCalendar();
+  });
+  document.getElementById('calSelectNone').addEventListener('click', async () => {
+    calSelected = [];
+    await saveCalSelection();
+    renderCalendar();
+  });
+
   // ---------- Modal logic ----------
   const overlay = document.getElementById('modalOverlay');
   const modalTitle = document.getElementById('modalTitle');
   const fName = document.getElementById('fName');
+  const fIcon = document.getElementById('fIcon');
+  const fColor = document.getElementById('fColor');
   const fPer = document.getElementById('fPer');
   const fMilestoneCount = document.getElementById('fMilestoneCount');
   const fMilestoneBonus = document.getElementById('fMilestoneBonus');
@@ -677,6 +1000,9 @@
     editingId = null;
     modalTitle.textContent = '新增簽到項目';
     fName.value = '';
+    const idx = items.length;
+    fIcon.value = ICON_ROTATION[idx % ICON_ROTATION.length];
+    fColor.value = COLOR_ROTATION[idx % COLOR_ROTATION.length];
     fPer.value = '';
     fMilestoneCount.value = '';
     fMilestoneBonus.value = '';
@@ -692,6 +1018,8 @@
     editingId = id;
     modalTitle.textContent = '編輯簽到項目';
     fName.value = item.name;
+    fIcon.value = item.icon || '👍';
+    fColor.value = item.color || '#E85C8A';
     fPer.value = item.perCheckin;
     fMilestoneCount.value = item.milestoneCount || '';
     fMilestoneBonus.value = item.milestoneBonus || '';
@@ -711,6 +1039,8 @@
       fName.focus();
       return;
     }
+    const icon = fIcon.value.trim() || '👍';
+    const color = fColor.value || '#E85C8A';
     const per = parseFloat(fPer.value) || 0;
     const mCount = fMilestoneCount.value ? parseInt(fMilestoneCount.value, 10) : null;
     const mBonus = fMilestoneBonus.value ? parseFloat(fMilestoneBonus.value) : null;
@@ -720,6 +1050,8 @@
       const item = items.find(i => i.id === editingId);
       if(item){
         item.name = name;
+        item.icon = icon;
+        item.color = color;
         item.perCheckin = per;
         item.milestoneCount = mCount;
         item.milestoneBonus = mBonus;
@@ -727,25 +1059,32 @@
       }
     } else {
       const eff = getEffectiveDateStr(new Date());
-      items.push({
+      const newItem = {
         id: uid(),
-        name, perCheckin: per,
+        name, icon, color, perCheckin: per,
         milestoneCount: mCount, milestoneBonus: mBonus,
         penaltyPerMiss: penalty,
         checkins: [], missed: [], lastSettledDate: eff
-      });
+      };
+      items.push(newItem);
+      calSelected.push(newItem.id);
+      await saveCalSelection();
     }
     await saveData();
     closeModal();
     render();
+    renderCalendar();
   }
 
   async function deleteCurrent(){
     if(!editingId) return;
     items = items.filter(i => i.id !== editingId);
+    calSelected = calSelected.filter(id => id !== editingId);
     await saveData();
+    await saveCalSelection();
     closeModal();
     render();
+    renderCalendar();
   }
 
   document.getElementById('openAddBtn').addEventListener('click', openAdd);
