@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>簽到存摺</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;700;900&family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#FFF1F6;
+    --card:#FFFFFF;
+    --ink:#4A2A38;
+    --ink-soft:#9A7282;
+    --primary:#E85C8A;
+    --primary-dark:#C23B66;
+    --primary-light:#FBD3E1;
+    --money:#C2185B;
+    --penalty:#9B3A4D;
+    --line:#F4CEDC;
+    font-size:16px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:
+      repeating-linear-gradient(0deg, transparent 0px, transparent 31px, var(--line) 32px),
+      var(--bg);
+    background-attachment:local;
+    color:var(--ink);
+    font-family:'Noto Sans TC', sans-serif;
+    min-height:100vh;
+    padding:28px 16px 80px;
+  }
+  .wrap{max-width:680px;margin:0 auto;}
+
+  /* ---------- Header ---------- */
+  .cover{
+    background:linear-gradient(160deg, #7A2748 0%, #D6477A 55%, #7A2748 100%);
+    color:#FFF3F8;
+    border-radius:18px;
+    padding:28px 26px 24px;
+    position:relative;
+    overflow:hidden;
+    box-shadow:0 14px 30px -14px rgba(122,39,72,.55);
+  }
+  .cover::before{
+    content:"";
+    position:absolute; inset:0;
+    background-image:radial-gradient(circle at 85% 15%, rgba(255,210,228,.22), transparent 55%);
+  }
+  .cover .eyebrow{
+    font-family:'JetBrains Mono', monospace;
+    letter-spacing:.18em;
+    font-size:11px;
+    color:#FFD3E2;
+    text-transform:uppercase;
+  }
+  .cover h1{
+    font-family:'Noto Serif TC', serif;
+    font-weight:900;
+    font-size:30px;
+    margin:6px 0 4px;
+    letter-spacing:.04em;
+  }
+  .cover .reset-note{
+    font-size:11.5px;
+    color:#FFE0EC;
+    margin-bottom:16px;
+    position:relative; z-index:1;
+  }
+  .cover .stats{
+    display:flex;
+    gap:16px;
+    flex-wrap:wrap;
+    position:relative;
+    z-index:1;
+  }
+  .stat-block{flex:1;min-width:110px;}
+  .stat-label{font-size:11.5px;color:#FFD3E2;margin-bottom:4px;}
+  .stat-value{
+    font-family:'JetBrains Mono', monospace;
+    font-weight:700;
+    font-size:22px;
+    color:#FFFFFF;
+  }
+  .stat-value.small{font-size:17px;}
+  .stat-value.penalty-stat{color:#FFC4D4;}
+
+  /* ---------- Section header ---------- */
+  .section-title{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    margin:30px 0 12px;
+  }
+  .section-title h2{
+    font-family:'Noto Serif TC', serif;
+    font-size:18px;
+    font-weight:700;
+    margin:0;
+    color:var(--ink);
+  }
+  .section-title .sub{font-size:12px;color:var(--ink-soft);}
+
+  .add-btn{
+    background:var(--primary);
+    color:#fff;
+    border:none;
+    border-radius:10px;
+    padding:9px 16px;
+    font-size:13px;
+    font-weight:700;
+    cursor:pointer;
+    font-family:'Noto Sans TC',sans-serif;
+    box-shadow:0 6px 14px -6px rgba(232,92,138,.55);
+    transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .add-btn:hover{transform:translateY(-1px);}
+  .add-btn:active{transform:translateY(0);}
+
+  /* ---------- Item row ---------- */
+  .items{display:flex; flex-direction:column; gap:14px;}
+  .item{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:16px 18px;
+    position:relative;
+    overflow:hidden;
+  }
+  .item-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:10px;
+  }
+  .item-name{
+    font-family:'Noto Serif TC', serif;
+    font-weight:700;
+    font-size:17px;
+    color:var(--ink);
+  }
+  .item-rule{
+    font-size:11.5px;
+    color:var(--ink-soft);
+    margin-top:3px;
+    font-family:'JetBrains Mono', monospace;
+    line-height:1.6;
+  }
+  .item-actions{display:flex; gap:6px;}
+  .icon-btn{
+    background:transparent;
+    border:none;
+    cursor:pointer;
+    color:var(--ink-soft);
+    font-size:15px;
+    padding:4px 6px;
+    border-radius:6px;
+  }
+  .icon-btn:hover{background:var(--primary-light); color:var(--primary-dark);}
+
+  .item-mid{
+    margin-top:14px;
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    gap:14px;
+    flex-wrap:wrap;
+  }
+
+  .grid{display:flex; gap:6px; flex-wrap:wrap; max-width:380px;}
+  .grid-cell{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    width:28px;
+  }
+  .cell-icon{
+    width:24px;height:24px;
+    border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-size:13px;
+    background:var(--primary-light);
+    border:1px solid var(--line);
+    color:transparent;
+  }
+  .cell-icon.filled{
+    background:var(--primary);
+    border-color:var(--primary-dark);
+  }
+  .cell-icon.next-slot{
+    background:#fff;
+    border:1.5px dashed var(--primary);
+  }
+  .cell-date{
+    font-size:9.5px;
+    color:var(--ink-soft);
+    margin-top:3px;
+    font-family:'JetBrains Mono', monospace;
+    white-space:nowrap;
+  }
+
+  .money-block{text-align:right;}
+  .money-label{font-size:11px; color:var(--ink-soft);}
+  .money-value{
+    font-family:'JetBrains Mono', monospace;
+    font-weight:700;
+    font-size:19px;
+    color:var(--money);
+  }
+  .money-sub{font-size:10.5px; color:var(--penalty); margin-top:2px;}
+
+  .item-bottom{margin-top:14px; display:flex; justify-content:flex-end;}
+  .checkin-btn{
+    border:none;
+    border-radius:999px;
+    padding:10px 22px;
+    font-size:14px;
+    font-weight:700;
+    cursor:pointer;
+    font-family:'Noto Sans TC',sans-serif;
+    background:var(--primary);
+    color:#fff;
+    display:flex;
+    align-items:center;
+    gap:6px;
+    box-shadow:0 8px 16px -8px rgba(194,59,102,.55);
+    transition:transform .12s ease;
+  }
+  .checkin-btn:hover{transform:translateY(-1px);}
+  .checkin-btn:disabled{
+    background:var(--primary-light);
+    color:var(--ink-soft);
+    box-shadow:none;
+    cursor:default;
+  }
+
+  /* thumbs-up stamp animation */
+  .stamp-mark{
+    position:absolute;
+    top:14px; right:16px;
+    width:60px;height:60px;
+    border:3px solid var(--primary-dark);
+    border-radius:50%;
+    background:#fff;
+    color:var(--primary-dark);
+    display:flex;align-items:center;justify-content:center;
+    font-size:30px;
+    transform:rotate(-18deg) scale(0);
+    opacity:0;
+    pointer-events:none;
+  }
+  @keyframes stampIn{
+    0%{transform:rotate(-18deg) scale(2.4); opacity:0;}
+    55%{transform:rotate(-12deg) scale(.9); opacity:1;}
+    75%{transform:rotate(-15deg) scale(1.08);}
+    100%{transform:rotate(-14deg) scale(1); opacity:1;}
+  }
+  .stamp-mark.play{animation:stampIn .5s cubic-bezier(.2,.8,.3,1) forwards;}
+
+  .empty-state{
+    text-align:center;
+    padding:40px 20px;
+    color:var(--ink-soft);
+    font-size:14px;
+    border:1.5px dashed var(--line);
+    border-radius:14px;
+  }
+
+  /* ---------- Modal ---------- */
+  .modal-overlay{
+    position:fixed; inset:0;
+    background:rgba(122,39,72,.35);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    z-index:50;
+  }
+  .modal-overlay.open{display:flex;}
+  .modal{
+    background:var(--card);
+    border-radius:16px;
+    padding:24px;
+    max-width:380px;
+    width:100%;
+    max-height:88vh;
+    overflow-y:auto;
+    box-shadow:0 30px 60px -20px rgba(122,39,72,.45);
+  }
+  .modal h3{
+    font-family:'Noto Serif TC', serif;
+    margin:0 0 16px;
+    font-size:18px;
+    color:var(--ink);
+  }
+  .field{margin-bottom:14px;}
+  .field label{
+    display:block;
+    font-size:12px;
+    color:var(--ink-soft);
+    margin-bottom:5px;
+    font-weight:500;
+  }
+  .field input{
+    width:100%;
+    padding:10px 12px;
+    border:1px solid var(--line);
+    border-radius:8px;
+    font-size:14px;
+    background:#FFFAFC;
+    color:var(--ink);
+    font-family:'Noto Sans TC',sans-serif;
+  }
+  .field input:focus{outline:2px solid var(--primary); outline-offset:1px;}
+  .field-row{display:flex; gap:10px;}
+  .field-row .field{flex:1;}
+  .field-hint{font-size:11px; color:var(--ink-soft); margin-top:-4px; margin-bottom:14px;}
+
+  .modal-actions{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-top:18px;
+  }
+  .btn{
+    border:none;
+    border-radius:8px;
+    padding:10px 18px;
+    font-size:13px;
+    font-weight:700;
+    cursor:pointer;
+    font-family:'Noto Sans TC',sans-serif;
+  }
+  .btn-primary{background:var(--primary); color:#fff;}
+  .btn-secondary{background:transparent; color:var(--ink-soft);}
+  .btn-danger{background:transparent; color:var(--penalty); font-size:12px;}
+
+  footer.note{
+    text-align:center;
+    font-size:11px;
+    color:var(--ink-soft);
+    margin-top:36px;
+  }
+
+  @media (max-width:480px){
+    .cover h1{font-size:24px;}
+    .stat-value{font-size:19px;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="cover">
+    <div class="eyebrow">DAILY CHECK-IN PASSBOOK</div>
+    <h1>簽到存摺</h1>
+    <div class="reset-note">每日凌晨 4:00 結算前一日狀況，未簽到將自動扣款</div>
+    <div class="stats">
+      <div class="stat-block">
+        <div class="stat-label">總累積金額</div>
+        <div class="stat-value" id="totalMoney">$0</div>
+      </div>
+      <div class="stat-block">
+        <div class="stat-label">今日已簽到</div>
+        <div class="stat-value small" id="todayCount">0 / 0</div>
+      </div>
+      <div class="stat-block">
+        <div class="stat-label">累計簽到次數</div>
+        <div class="stat-value small" id="totalCheckins">0</div>
+      </div>
+      <div class="stat-block">
+        <div class="stat-label">累計扣款</div>
+        <div class="stat-value small penalty-stat" id="totalPenalty">$0</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-title">
+    <div>
+      <h2>簽到項目</h2>
+      <div class="sub">每個項目每天只能簽到一次</div>
+    </div>
+    <button class="add-btn" id="openAddBtn">＋ 新增項目</button>
+  </div>
+
+  <div class="items" id="itemsList"></div>
+
+  <footer class="note">資料儲存在你的帳號中，僅你自己可見。金額、獎勵與扣款規則皆可自由編輯。</footer>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h3 id="modalTitle">新增簽到項目</h3>
+    <div class="field">
+      <label for="fName">項目名稱</label>
+      <input type="text" id="fName" placeholder="例如：每日喝水、閱讀 30 分鐘">
+    </div>
+    <div class="field">
+      <label for="fPer">每次簽到獲得金額（元）</label>
+      <input type="number" id="fPer" placeholder="例如：5" min="0" step="0.1">
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label for="fMilestoneCount">每滿幾次給獎金 / 格子數</label>
+        <input type="number" id="fMilestoneCount" placeholder="例如：7（留空預設7格）" min="1" step="1">
+      </div>
+      <div class="field">
+        <label for="fMilestoneBonus">獎金金額（元）</label>
+        <input type="number" id="fMilestoneBonus" placeholder="例如：20" min="0" step="0.1">
+      </div>
+    </div>
+    <div class="field-hint">簽到格子數量會隨「每滿幾次」自動調整，並在格子下方標示日期。</div>
+    <div class="field">
+      <label for="fPenalty">未簽到扣款金額（元）</label>
+      <input type="number" id="fPenalty" placeholder="例如：3（留空或0表示不扣款）" min="0" step="0.1">
+    </div>
+    <div class="field-hint">每日凌晨 4:00 結算前一日，若當日未簽到會自動扣這個金額。</div>
+    <div class="modal-actions">
+      <button class="btn btn-danger" id="deleteItemBtn" style="display:none;">刪除此項目</button>
+      <div style="margin-left:auto; display:flex; gap:8px;">
+        <button class="btn btn-secondary" id="cancelBtn">取消</button>
+        <button class="btn btn-primary" id="saveBtn">儲存</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const STORAGE_KEY = 'checkin-passbook-items';
+  let items = [];
+  let editingId = null;
+
+  // ---- date helpers (day resets at 04:00) ----
+  function formatDate(dt){
+    return dt.getFullYear() + '-' + String(dt.getMonth()+1).padStart(2,'0') + '-' + String(dt.getDate()).padStart(2,'0');
+  }
+  function getEffectiveDateStr(d){
+    const dt = new Date(d.getTime());
+    dt.setHours(dt.getHours() - 4);
+    return formatDate(dt);
+  }
+  function addDaysStr(dateStr, delta){
+    const [y,m,d] = dateStr.split('-').map(Number);
+    const dt = new Date(y, m-1, d, 12, 0, 0);
+    dt.setDate(dt.getDate() + delta);
+    return formatDate(dt);
+  }
+  function formatShort(dateStr){
+    const parts = dateStr.split('-');
+    return parseInt(parts[1],10) + '/' + parseInt(parts[2],10);
+  }
+  function uid(){ return 'i' + Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+  function fmtMoney(n){
+    const sign = n < 0 ? '-' : '';
+    n = Math.abs(n);
+    const rounded = Math.round(n * 100) / 100;
+    return sign + '$' + rounded.toLocaleString('en-US', {minimumFractionDigits: (rounded % 1 === 0 ? 0 : 2), maximumFractionDigits:2});
+  }
+
+  function defaultItems(eff){
+    return [
+      { id: uid(), name: '每日喝水提醒', perCheckin: 5, milestoneCount: 7, milestoneBonus: 20, penaltyPerMiss: 2, checkins: [], missed: [], lastSettledDate: eff },
+      { id: uid(), name: '閱讀 30 分鐘', perCheckin: 10, milestoneCount: 7, milestoneBonus: 50, penaltyPerMiss: 0, checkins: [], missed: [], lastSettledDate: eff },
+      { id: uid(), name: '運動健身', perCheckin: 15, milestoneCount: 30, milestoneBonus: 200, penaltyPerMiss: 5, checkins: [], missed: [], lastSettledDate: eff }
+    ];
+  }
+
+  async function loadData(){
+    const eff = getEffectiveDateStr(new Date());
+    try{
+      const res = await window.storage.get(STORAGE_KEY, false);
+      if(res && res.value){
+        items = JSON.parse(res.value);
+        items.forEach(it => {
+          if(it.missed === undefined) it.missed = [];
+          if(it.penaltyPerMiss === undefined || it.penaltyPerMiss === null) it.penaltyPerMiss = 0;
+          if(!it.lastSettledDate) it.lastSettledDate = eff; // avoid retroactive penalty on migration
+        });
+      } else {
+        items = defaultItems(eff);
+      }
+    } catch(e){
+      items = defaultItems(eff);
+    }
+
+    let changed = false;
+    items.forEach(it => { if(settleItem(it, eff)) changed = true; });
+    if(changed || true) await saveData(); // persist migrations/settlement
+    render();
+  }
+
+  function settleItem(item, effectiveToday){
+    let cursor = addDaysStr(item.lastSettledDate, 1);
+    let changed = false;
+    let guard = 0;
+    while(cursor < effectiveToday && guard < 3650){
+      if(!item.checkins.includes(cursor) && !item.missed.includes(cursor)){
+        item.missed.push(cursor);
+        changed = true;
+      }
+      cursor = addDaysStr(cursor, 1);
+      guard++;
+    }
+    if(item.lastSettledDate < addDaysStr(effectiveToday, -1)){
+      item.lastSettledDate = addDaysStr(effectiveToday, -1);
+      changed = true;
+    }
+    return changed;
+  }
+
+  async function saveData(){
+    try{
+      await window.storage.set(STORAGE_KEY, JSON.stringify(items), false);
+    } catch(e){
+      console.error('儲存失敗', e);
+    }
+  }
+
+  function calcItemStats(item){
+    const count = item.checkins.length;
+    const base = count * (Number(item.perCheckin) || 0);
+    let bonus = 0;
+    const ms = Number(item.milestoneCount) || 0;
+    if(ms > 0){
+      const hits = Math.floor(count / ms);
+      bonus = hits * (Number(item.milestoneBonus) || 0);
+    }
+    const missedCount = (item.missed || []).length;
+    const penalty = missedCount * (Number(item.penaltyPerMiss) || 0);
+    return { count, missedCount, penalty, total: base + bonus - penalty };
+  }
+
+  function buildGrid(item, effectiveToday, doneToday){
+    const gridSize = (Number(item.milestoneCount) > 0) ? Number(item.milestoneCount) : 7;
+    const cells = [];
+    if(Number(item.milestoneCount) > 0){
+      const sorted = item.checkins.slice().sort();
+      const count = sorted.length;
+      const filledCount = count % gridSize;
+      const cycleDates = filledCount > 0 ? sorted.slice(count - filledCount) : [];
+      for(let i = 0; i < gridSize; i++){
+        if(i < filledCount){
+          cells.push({ filled: true, date: cycleDates[i] });
+        } else {
+          cells.push({ filled: false, date: null, isNext: (i === filledCount && !doneToday) });
+        }
+      }
+    } else {
+      for(let i = gridSize - 1; i >= 0; i--){
+        const ds = addDaysStr(effectiveToday, -i);
+        cells.push({ filled: item.checkins.includes(ds), date: ds });
+      }
+    }
+    return cells;
+  }
+
+  function render(){
+    const list = document.getElementById('itemsList');
+    list.innerHTML = '';
+
+    if(items.length === 0){
+      list.innerHTML = '<div class="empty-state">還沒有任何簽到項目<br>點上方「＋ 新增項目」開始建立吧</div>';
+    }
+
+    const effectiveToday = getEffectiveDateStr(new Date());
+    let grandTotal = 0, totalCheckinsAll = 0, todayDone = 0, grandPenalty = 0;
+
+    items.forEach(item => {
+      const { count, missedCount, penalty, total } = calcItemStats(item);
+      grandTotal += total;
+      totalCheckinsAll += count;
+      grandPenalty += penalty;
+      const doneToday = item.checkins.includes(effectiveToday);
+      if(doneToday) todayDone++;
+
+      const el = document.createElement('div');
+      el.className = 'item';
+
+      const cells = buildGrid(item, effectiveToday, doneToday);
+      let gridHtml = '';
+      cells.forEach(c => {
+        const cls = c.filled ? 'filled' : (c.isNext ? 'next-slot' : '');
+        gridHtml += `<div class="grid-cell">
+            <div class="cell-icon ${cls}">${c.filled ? '👍' : ''}</div>
+            <div class="cell-date">${c.date ? formatShort(c.date) : ''}</div>
+          </div>`;
+      });
+
+      const ms = Number(item.milestoneCount) || 0;
+      const milestoneText = (ms > 0 && item.milestoneBonus)
+        ? `每滿 ${ms} 次 +${item.milestoneBonus} 元獎金`
+        : '無里程碑獎金';
+      const penaltyText = (Number(item.penaltyPerMiss) > 0)
+        ? `・未簽到扣 ${item.penaltyPerMiss} 元`
+        : '';
+
+      el.innerHTML = `
+        <div class="stamp-mark" data-stamp>👍</div>
+        <div class="item-top">
+          <div>
+            <div class="item-name">${escapeHtml(item.name)}</div>
+            <div class="item-rule">每次 +${item.perCheckin} 元 ・ ${milestoneText}${penaltyText}</div>
+          </div>
+          <div class="item-actions">
+            <button class="icon-btn" data-edit="${item.id}" title="編輯">✎</button>
+          </div>
+        </div>
+        <div class="item-mid">
+          <div class="grid">${gridHtml}</div>
+          <div class="money-block">
+            <div class="money-label">累積 ${count} 次</div>
+            <div class="money-value">${fmtMoney(total)}</div>
+            ${missedCount > 0 ? `<div class="money-sub">已扣款 ${missedCount} 次 (-${fmtMoney(penalty).replace('-','').replace('$','')})</div>` : ''}
+          </div>
+        </div>
+        <div class="item-bottom">
+          <button class="checkin-btn" data-checkin="${item.id}" ${doneToday ? 'disabled' : ''}>
+            ${doneToday ? '👍 今日已簽到' : '今日簽到'}
+          </button>
+        </div>
+      `;
+      list.appendChild(el);
+    });
+
+    document.getElementById('totalMoney').textContent = fmtMoney(grandTotal);
+    document.getElementById('todayCount').textContent = `${todayDone} / ${items.length}`;
+    document.getElementById('totalCheckins').textContent = totalCheckinsAll;
+    document.getElementById('totalPenalty').textContent = fmtMoney(-grandPenalty);
+
+    list.querySelectorAll('[data-checkin]').forEach(btn => {
+      btn.addEventListener('click', () => doCheckin(btn.getAttribute('data-checkin'), btn));
+    });
+    list.querySelectorAll('[data-edit]').forEach(btn => {
+      btn.addEventListener('click', () => openEdit(btn.getAttribute('data-edit')));
+    });
+  }
+
+  function escapeHtml(str){
+    const d = document.createElement('div');
+    d.textContent = str;
+    return d.innerHTML;
+  }
+
+  async function doCheckin(id, btnEl){
+    const item = items.find(i => i.id === id);
+    if(!item) return;
+    const eff = getEffectiveDateStr(new Date());
+    if(item.checkins.includes(eff)) return;
+    item.checkins.push(eff);
+    // if today was already marked missed somehow (clock edge case), undo it
+    item.missed = (item.missed || []).filter(d => d !== eff);
+    await saveData();
+    render();
+
+    const newCard = Array.from(document.querySelectorAll('.item')).find(c => c.querySelector(`[data-checkin="${id}"]`));
+    if(newCard){
+      const s = newCard.querySelector('[data-stamp]');
+      requestAnimationFrame(() => { s.classList.add('play'); });
+    }
+  }
+
+  // ---------- Modal logic ----------
+  const overlay = document.getElementById('modalOverlay');
+  const modalTitle = document.getElementById('modalTitle');
+  const fName = document.getElementById('fName');
+  const fPer = document.getElementById('fPer');
+  const fMilestoneCount = document.getElementById('fMilestoneCount');
+  const fMilestoneBonus = document.getElementById('fMilestoneBonus');
+  const fPenalty = document.getElementById('fPenalty');
+  const deleteBtn = document.getElementById('deleteItemBtn');
+
+  function openAdd(){
+    editingId = null;
+    modalTitle.textContent = '新增簽到項目';
+    fName.value = '';
+    fPer.value = '';
+    fMilestoneCount.value = '';
+    fMilestoneBonus.value = '';
+    fPenalty.value = '';
+    deleteBtn.style.display = 'none';
+    overlay.classList.add('open');
+    setTimeout(() => fName.focus(), 50);
+  }
+
+  function openEdit(id){
+    const item = items.find(i => i.id === id);
+    if(!item) return;
+    editingId = id;
+    modalTitle.textContent = '編輯簽到項目';
+    fName.value = item.name;
+    fPer.value = item.perCheckin;
+    fMilestoneCount.value = item.milestoneCount || '';
+    fMilestoneBonus.value = item.milestoneBonus || '';
+    fPenalty.value = item.penaltyPerMiss || '';
+    deleteBtn.style.display = 'inline-block';
+    overlay.classList.add('open');
+  }
+
+  function closeModal(){
+    overlay.classList.remove('open');
+    editingId = null;
+  }
+
+  async function saveModal(){
+    const name = fName.value.trim();
+    if(!name){
+      fName.focus();
+      return;
+    }
+    const per = parseFloat(fPer.value) || 0;
+    const mCount = fMilestoneCount.value ? parseInt(fMilestoneCount.value, 10) : null;
+    const mBonus = fMilestoneBonus.value ? parseFloat(fMilestoneBonus.value) : null;
+    const penalty = fPenalty.value ? parseFloat(fPenalty.value) : 0;
+
+    if(editingId){
+      const item = items.find(i => i.id === editingId);
+      if(item){
+        item.name = name;
+        item.perCheckin = per;
+        item.milestoneCount = mCount;
+        item.milestoneBonus = mBonus;
+        item.penaltyPerMiss = penalty;
+      }
+    } else {
+      const eff = getEffectiveDateStr(new Date());
+      items.push({
+        id: uid(),
+        name, perCheckin: per,
+        milestoneCount: mCount, milestoneBonus: mBonus,
+        penaltyPerMiss: penalty,
+        checkins: [], missed: [], lastSettledDate: eff
+      });
+    }
+    await saveData();
+    closeModal();
+    render();
+  }
+
+  async function deleteCurrent(){
+    if(!editingId) return;
+    items = items.filter(i => i.id !== editingId);
+    await saveData();
+    closeModal();
+    render();
+  }
+
+  document.getElementById('openAddBtn').addEventListener('click', openAdd);
+  document.getElementById('cancelBtn').addEventListener('click', closeModal);
+  document.getElementById('saveBtn').addEventListener('click', saveModal);
+  deleteBtn.addEventListener('click', deleteCurrent);
+  overlay.addEventListener('click', (e) => { if(e.target === overlay) closeModal(); });
+
+  loadData();
+})();
+</script>
+</body>
+</html>
