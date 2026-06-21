@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>簽到存摺</title>
+<title>好棒棒的簽到存摺</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;700;900&family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
@@ -70,11 +70,28 @@
     letter-spacing:.04em;
     color:#7A3A58;
   }
+  .cover .reset-note-row{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    margin-bottom:16px;
+  }
   .cover .reset-note{
     font-size:11.5px;
     color:#A8728F;
-    margin-bottom:16px;
   }
+  .edit-note-btn{
+    background:rgba(255,255,255,.5);
+    border:none;
+    border-radius:6px;
+    width:20px; height:20px;
+    cursor:pointer;
+    color:#A8728F;
+    font-size:10.5px;
+    flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .edit-note-btn:hover{background:rgba(255,255,255,.85); color:#7A3A58;}
   .cover .stats{
     display:flex;
     gap:16px;
@@ -90,6 +107,16 @@
   }
   .stat-value.small{font-size:17px;}
   .stat-value.penalty-stat{color:#B5536F;}
+
+  /* ---------- Tabs ---------- */
+  .tabs{display:flex; gap:8px; margin:22px 0 4px;}
+  .tab-btn{
+    flex:1; background:#FFF6FA; border:1px solid var(--line);
+    border-radius:10px; padding:10px; font-size:13.5px; font-weight:700;
+    color:var(--ink-soft); cursor:pointer; font-family:'Noto Sans TC',sans-serif;
+  }
+  .tab-btn.active{background:var(--primary); color:#fff; border-color:var(--primary-dark);}
+  .view.hidden{display:none;}
 
   /* ---------- Section header ---------- */
   .section-title{
@@ -134,7 +161,31 @@
     padding:16px 18px;
     position:relative;
     overflow:hidden;
+    transition:opacity .15s ease;
   }
+  .item.dragging{
+    opacity:.6;
+    box-shadow:0 14px 28px -12px rgba(122,39,72,.4);
+    z-index:5;
+  }
+  .item-top-left{
+    display:flex;
+    align-items:flex-start;
+    gap:6px;
+    min-width:0;
+  }
+  .drag-handle{
+    cursor:grab;
+    touch-action:none;
+    user-select:none;
+    color:var(--ink-soft);
+    font-size:17px;
+    line-height:1;
+    padding:3px 4px 3px 0;
+    margin-top:1px;
+    flex-shrink:0;
+  }
+  .drag-handle:active{cursor:grabbing;}
   .item-top{
     display:flex;
     justify-content:space-between;
@@ -250,11 +301,10 @@
     transition:transform .12s ease;
   }
   .checkin-btn:hover{transform:translateY(-1px);}
-  .checkin-btn:disabled{
+  .checkin-btn.is-done{
     background:var(--primary-light);
-    color:var(--ink-soft);
+    color:var(--primary-dark);
     box-shadow:none;
-    cursor:default;
   }
 
   .stamp-mark{
@@ -378,6 +428,8 @@
     gap:3px;
   }
   .cal-day.empty{background:transparent; border:none;}
+  .cal-day.has-day{cursor:pointer;}
+  .cal-day.has-day:hover{box-shadow:0 0 0 2px var(--primary-light) inset;}
   .cal-day.today{border:1.5px solid var(--primary);}
   .cal-daynum{font-size:10.5px; color:var(--ink-soft); font-family:'JetBrains Mono',monospace;}
   .cal-badges{display:flex; flex-wrap:wrap; gap:2px;}
@@ -386,10 +438,91 @@
     display:flex; align-items:center; justify-content:center;
     font-size:9px; color:#fff; line-height:1;
   }
+  .cal-badge.makeup{
+    background:#fff !important;
+    border:1.5px dashed currentColor;
+  }
   .cal-empty-note{
     text-align:center; font-size:12.5px; color:var(--ink-soft);
     padding:30px 10px;
   }
+  .cal-legend{display:flex; gap:14px; margin-top:10px; font-size:10.5px; color:var(--ink-soft); flex-wrap:wrap;}
+  .cal-legend span{display:inline-flex; align-items:center; gap:4px;}
+  .legend-dot{width:10px;height:10px;border-radius:50%; display:inline-block;}
+
+  /* ---------- Ledger summary (total + goal) ---------- */
+  .ledger-summary{
+    display:flex;
+    gap:16px;
+    flex-wrap:wrap;
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:18px;
+    margin-bottom:14px;
+    align-items:center;
+  }
+  .summary-block{flex:1; min-width:120px;}
+  .summary-label{
+    font-size:11.5px; color:var(--ink-soft); margin-bottom:4px;
+    display:flex; align-items:center; gap:6px;
+  }
+  .summary-value{
+    font-family:'JetBrains Mono', monospace;
+    font-weight:700;
+    font-size:22px;
+    color:var(--money);
+  }
+  .summary-value.goal{color:var(--ink);}
+  .summary-progress{flex:2; min-width:180px;}
+  .progress-bar-track{
+    width:100%; height:14px; border-radius:99px;
+    background:var(--primary-light);
+    overflow:hidden;
+    margin-bottom:6px;
+  }
+  .progress-bar-fill{
+    height:100%; border-radius:99px;
+    background:linear-gradient(90deg, var(--primary), var(--primary-dark));
+    width:0%;
+    transition:width .4s ease;
+  }
+  .progress-percent{
+    font-family:'JetBrains Mono', monospace;
+    font-weight:700;
+    font-size:14px;
+    color:var(--primary-dark);
+  }
+  .edit-goal-btn{
+    background:none; border:none; cursor:pointer;
+    color:var(--ink-soft); font-size:12px; padding:0;
+  }
+  .edit-goal-btn:hover{color:var(--primary-dark);}
+
+  /* ---------- Ledger (money log) ---------- */
+  .ledger-card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:8px 16px;
+  }
+  .ledger-row{
+    display:grid;
+    grid-template-columns:54px 1fr 92px 86px;
+    gap:8px;
+    align-items:center;
+    padding:11px 4px;
+    border-bottom:1px solid var(--line);
+    font-size:12.5px;
+  }
+  .ledger-row:last-child{border-bottom:none;}
+  .ledger-date{font-family:'JetBrains Mono',monospace; color:var(--ink-soft); font-size:11px;}
+  .ledger-item{display:flex; align-items:center; gap:6px; min-width:0;}
+  .ledger-item span.nm{overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .ledger-type{font-size:11px; color:var(--ink-soft);}
+  .ledger-amt{font-family:'JetBrains Mono',monospace; font-weight:700; text-align:right;}
+  .amt-pos{color:var(--money);}
+  .amt-neg{color:var(--penalty);}
 
   /* ---------- Modal ---------- */
   .modal-overlay{
@@ -412,6 +545,7 @@
     overflow-y:auto;
     box-shadow:0 30px 60px -20px rgba(122,39,72,.45);
   }
+  .modal.wide{max-width:420px;}
   .modal h3{
     font-family:'Noto Serif TC', serif;
     margin:0 0 16px;
@@ -461,6 +595,25 @@
   .btn-secondary{background:transparent; color:var(--ink-soft);}
   .btn-danger{background:transparent; color:var(--penalty); font-size:12px;}
 
+  /* day modal */
+  .day-modal-list{display:flex; flex-direction:column; gap:10px; margin-top:4px;}
+  .day-modal-row{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    padding:10px; border:1px solid var(--line); border-radius:10px;
+  }
+  .day-modal-info{display:flex; align-items:center; gap:8px; font-size:13px; min-width:0;}
+  .day-modal-text{min-width:0;}
+  .day-modal-name{font-weight:700; font-size:13.5px;}
+  .day-modal-status{font-size:11px; color:var(--ink-soft); margin-top:2px;}
+  .day-action-btn{
+    font-size:11.5px; padding:7px 11px; border-radius:8px; border:1px solid var(--line);
+    cursor:pointer; font-weight:700; white-space:nowrap; font-family:'Noto Sans TC',sans-serif;
+  }
+  .day-action-makeup{background:var(--primary); color:#fff; border:none;}
+  .day-action-checkin{background:var(--primary); color:#fff; border:none;}
+  .day-action-undo{background:#FFF1F5; color:var(--penalty);}
+  .day-action-removeMakeup{background:#FFF1F5; color:var(--penalty);}
+
   footer.note{
     text-align:center;
     font-size:11px;
@@ -472,6 +625,8 @@
     .cover h1{font-size:24px;}
     .stat-value{font-size:19px;}
     .cal-day{min-height:46px;}
+    .ledger-row{grid-template-columns:48px 1fr 78px; font-size:11.5px;}
+    .ledger-type{display:none;}
   }
 </style>
 </head>
@@ -481,8 +636,11 @@
   <div class="cover">
     <div class="cover-inner">
       <div class="eyebrow">DAILY CHECK-IN PASSBOOK</div>
-      <h1>簽到存摺</h1>
-      <div class="reset-note">每日凌晨 4:00 結算前一日狀況，未簽到將自動扣款</div>
+      <h1>好棒棒的簽到存摺</h1>
+      <div class="reset-note-row">
+        <span class="reset-note" id="resetNoteText">每日凌晨 4:00 結算前一日狀況，未簽到將自動扣款</span>
+        <button class="edit-note-btn" id="editNoteBtn" title="編輯這段文字">✎</button>
+      </div>
       <div class="stats">
         <div class="stat-block">
           <div class="stat-label">總累積金額</div>
@@ -497,56 +655,95 @@
           <div class="stat-value small" id="totalCheckins">0</div>
         </div>
         <div class="stat-block">
-          <div class="stat-label">累計扣款</div>
+          <div class="stat-label">目前扣款中</div>
           <div class="stat-value small penalty-stat" id="totalPenalty">$0</div>
         </div>
       </div>
     </div>
   </div>
 
-  <div class="section-title">
-    <div>
-      <h2>簽到項目</h2>
-      <div class="sub">每個項目每天只能簽到一次</div>
-    </div>
-    <button class="add-btn" id="openAddBtn">＋ 新增項目</button>
+  <div class="tabs">
+    <button class="tab-btn active" id="tabCheckinBtn">📅 簽到</button>
+    <button class="tab-btn" id="tabLedgerBtn">💰 金錢紀錄</button>
   </div>
 
-  <div class="items" id="itemsList"></div>
-
-  <div class="calendar-section">
+  <div class="view" id="viewCheckin">
     <div class="section-title">
       <div>
-        <h2>月曆紀錄</h2>
-        <div class="sub">查看每天完成了哪些項目</div>
+        <h2>簽到項目</h2>
+        <div class="sub">每個項目每天只能簽到一次，已簽到可點按鈕取消</div>
       </div>
+      <button class="add-btn" id="openAddBtn">＋ 新增項目</button>
     </div>
-    <div class="cal-card">
-      <div class="cal-header">
-        <div class="cal-nav">
-          <button id="calPrev">◀</button>
-          <div class="cal-title" id="calTitle">2026年6月</div>
-          <button id="calNext">▶</button>
+
+    <div class="items" id="itemsList"></div>
+
+    <div class="calendar-section">
+      <div class="section-title">
+        <div>
+          <h2>月曆紀錄</h2>
+          <div class="sub">點任一天可補簽過去或取消當天的簽到</div>
         </div>
-        <div class="cal-filter-wrap">
-          <button class="cal-filter-btn" id="calFilterBtn">顯示項目 ▾</button>
-          <div class="cal-filter-panel" id="calFilterPanel">
-            <div class="cal-filter-actions">
-              <button id="calSelectAll">全選</button>
-              <button id="calSelectNone">取消全選</button>
+      </div>
+      <div class="cal-card">
+        <div class="cal-header">
+          <div class="cal-nav">
+            <button id="calPrev">◀</button>
+            <div class="cal-title" id="calTitle">2026年6月</div>
+            <button id="calNext">▶</button>
+          </div>
+          <div class="cal-filter-wrap">
+            <button class="cal-filter-btn" id="calFilterBtn">顯示項目 ▾</button>
+            <div class="cal-filter-panel" id="calFilterPanel">
+              <div class="cal-filter-actions">
+                <button id="calSelectAll">全選</button>
+                <button id="calSelectNone">取消全選</button>
+              </div>
+              <div class="cal-filter-list" id="calFilterList"></div>
             </div>
-            <div class="cal-filter-list" id="calFilterList"></div>
           </div>
         </div>
+        <div id="calBody"></div>
+        <div class="cal-legend">
+          <span><span class="legend-dot" style="background:var(--primary)"></span>當日簽到</span>
+          <span><span class="legend-dot" style="border:1.5px dashed var(--primary); background:#fff;"></span>補簽（不計積點）</span>
+        </div>
       </div>
-      <div id="calBody"></div>
     </div>
   </div>
 
-  <footer class="note">資料會自動儲存在你的裝置／帳號中，重新整理或更新頁面也不會消失。金額、獎勵、扣款與顯示樣式皆可自由編輯。</footer>
+  <div class="view hidden" id="viewLedger">
+    <div class="section-title">
+      <div>
+        <h2>金錢紀錄明細</h2>
+        <div class="sub">每一筆收入、獎金與扣款都會記錄在這裡</div>
+      </div>
+    </div>
+    <div class="ledger-summary">
+      <div class="summary-block">
+        <div class="summary-label">目前總額</div>
+        <div class="summary-value" id="summaryTotal">$0</div>
+      </div>
+      <div class="summary-block">
+        <div class="summary-label">目標金額 <button class="edit-goal-btn" id="editGoalBtn">✎ 設定</button></div>
+        <div class="summary-value goal" id="summaryGoal">尚未設定</div>
+      </div>
+      <div class="summary-progress">
+        <div class="progress-bar-track"><div class="progress-bar-fill" id="progressFill"></div></div>
+        <div class="progress-percent" id="progressPercent">—</div>
+      </div>
+      <div class="summary-block">
+        <div class="summary-label">扣款上限 <button class="edit-goal-btn" id="editCapBtn">✎ 設定</button></div>
+        <div class="summary-value goal" id="summaryCap" style="font-size:14.5px;">未設定</div>
+      </div>
+    </div>
+    <div class="ledger-card" id="ledgerBody"></div>
+  </div>
+
+  <footer class="note">資料會自動儲存在你的裝置／帳號中，重新整理或更新頁面也不會消失。更改金額規則只會影響未來，不會改動已累積的金額。</footer>
 </div>
 
-<!-- Modal -->
+<!-- Add/Edit item modal -->
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal">
     <h3 id="modalTitle">新增簽到項目</h3>
@@ -583,7 +780,7 @@
       <label for="fPenalty">未簽到扣款金額（元）</label>
       <input type="number" id="fPenalty" placeholder="例如：3（留空或0表示不扣款）" min="0" step="0.1">
     </div>
-    <div class="field-hint">每日凌晨 4:00 結算前一日，若當日未簽到會自動扣這個金額。</div>
+    <div class="field-hint">這裡的規則只會套用在「之後」發生的簽到／扣款，已經累積的金額不會被改動。</div>
     <div class="modal-actions">
       <button class="btn btn-danger" id="deleteItemBtn" style="display:none;">刪除此項目</button>
       <div style="margin-left:auto; display:flex; gap:8px;">
@@ -594,41 +791,124 @@
   </div>
 </div>
 
+<!-- Day detail modal (for makeup / undo) -->
+<div class="modal-overlay" id="dayModalOverlay">
+  <div class="modal wide">
+    <h3 id="dayModalTitle">2026/6/19</h3>
+    <div class="day-modal-list" id="dayModalList"></div>
+    <div class="modal-actions">
+      <div></div>
+      <button class="btn btn-secondary" id="dayModalClose">關閉</button>
+    </div>
+  </div>
+</div>
+
+<!-- Subtitle note edit modal -->
+<div class="modal-overlay" id="noteModalOverlay">
+  <div class="modal">
+    <h3>編輯封面說明文字</h3>
+    <div class="field">
+      <label for="fNote">說明文字</label>
+      <input type="text" id="fNote" placeholder="例如：每次10元，連續7天加碼20元！" maxlength="80">
+    </div>
+    <div class="field-hint">這段文字會顯示在「好棒棒的簽到存摺」標題下面，可以自由填寫規則說明或鼓勵的話。</div>
+    <div class="modal-actions">
+      <div></div>
+      <div style="display:flex; gap:8px;">
+        <button class="btn btn-secondary" id="noteCancelBtn">取消</button>
+        <button class="btn btn-primary" id="noteSaveBtn">儲存</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Goal amount modal -->
+<div class="modal-overlay" id="goalModalOverlay">
+  <div class="modal">
+    <h3>設定目標金額</h3>
+    <div class="field">
+      <label for="fGoal">目標金額（元）</label>
+      <input type="number" id="fGoal" placeholder="例如：3000" min="0" step="1">
+    </div>
+    <div class="field-hint">設定後，金錢紀錄頂部會顯示目前累積金額達成目標的百分比。留空或填 0 表示不設定目標。</div>
+    <div class="modal-actions">
+      <div></div>
+      <div style="display:flex; gap:8px;">
+        <button class="btn btn-secondary" id="goalCancelBtn">取消</button>
+        <button class="btn btn-primary" id="goalSaveBtn">儲存</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Daily / weekly deduction cap modal -->
+<div class="modal-overlay" id="capModalOverlay">
+  <div class="modal">
+    <h3>設定扣款上限</h3>
+    <div class="field-row">
+      <div class="field">
+        <label for="fDailyCap">單日扣款上限（元）</label>
+        <input type="number" id="fDailyCap" placeholder="例如：10" min="0" step="0.1">
+      </div>
+      <div class="field">
+        <label for="fWeeklyCap">單週扣款上限（元）</label>
+        <input type="number" id="fWeeklyCap" placeholder="例如：30" min="0" step="0.1">
+      </div>
+    </div>
+    <div class="field-hint">單日上限會限制所有項目「同一天」加總被扣的金額；單週上限以禮拜一為一週的開始，限制整週加總被扣的金額。留空或填 0 表示不設上限。</div>
+    <div class="modal-actions">
+      <div></div>
+      <div style="display:flex; gap:8px;">
+        <button class="btn btn-secondary" id="capCancelBtn">取消</button>
+        <button class="btn btn-primary" id="capSaveBtn">儲存</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 (function(){
   const STORAGE_KEY = 'checkin-passbook-items';
   const CAL_KEY = 'checkin-passbook-calendar-selected';
+  const TX_KEY = 'checkin-passbook-transactions';
+  const GOAL_KEY = 'checkin-passbook-goal';
+  const CAP_KEY = 'checkin-passbook-caps';
+
   let items = [];
-  let editingId = null;
+  let transactions = [];
   let calSelected = [];
+  let editingId = null;
+  let txCounter = 0;
+  let currentDayDate = null;
+  let goalAmount = 0;
+  let dailyCap = 0;
+  let weeklyCap = 0;
 
   const ICON_ROTATION = ['💧','📘','💪','✨','🎯','🌙','🍀','🎨'];
   const COLOR_ROTATION = ['#A6C2F2','#C9A6F2','#F2C49A','#F2A6C6','#A6E0CB','#F2E2A6','#A6D8F2','#E3B6F2'];
+  const TYPE_LABELS = {
+    checkin:'簽到收入', milestone:'里程碑獎金', penalty:'未簽到扣款',
+    refund_penalty:'補簽退款', opening_balance:'期初餘額轉入'
+  };
 
-  // ---- storage abstraction: uses Claude's secure storage when available,
-  // falls back to localStorage when the page is opened outside Claude.ai
-  // (e.g. saved/opened directly as a file in a mobile browser). ----
+  // ---- storage abstraction: Claude's secure storage when available,
+  // falls back to localStorage when opened outside Claude.ai ----
   const hasClaudeStorage = typeof window.storage !== 'undefined'
     && typeof window.storage.get === 'function'
     && typeof window.storage.set === 'function';
 
   async function storageGet(key){
     if(hasClaudeStorage){
-      try{ return await window.storage.get(key, false); }
-      catch(e){ return null; }
+      try{ return await window.storage.get(key, false); } catch(e){ return null; }
     }
-    try{
-      const raw = localStorage.getItem(key);
-      return raw !== null ? { value: raw } : null;
-    } catch(e){ return null; }
+    try{ const raw = localStorage.getItem(key); return raw !== null ? { value: raw } : null; }
+    catch(e){ return null; }
   }
   async function storageSet(key, value){
     if(hasClaudeStorage){
-      try{ return await window.storage.set(key, value, false); }
-      catch(e){ return null; }
+      try{ return await window.storage.set(key, value, false); } catch(e){ return null; }
     }
-    try{ localStorage.setItem(key, value); return { value }; }
-    catch(e){ return null; }
+    try{ localStorage.setItem(key, value); return { value }; } catch(e){ return null; }
   }
 
   // ---- date helpers (day resets at 04:00) ----
@@ -651,11 +931,17 @@
     return parseInt(parts[1],10) + '/' + parseInt(parts[2],10);
   }
   function uid(){ return 'i' + Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+  function txid(){ return 't' + Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
   function fmtMoney(n){
     const sign = n < 0 ? '-' : '';
     n = Math.abs(n);
     const rounded = Math.round(n * 100) / 100;
     return sign + '$' + rounded.toLocaleString('en-US', {minimumFractionDigits: (rounded % 1 === 0 ? 0 : 2), maximumFractionDigits:2});
+  }
+  function fmtSigned(n){
+    const v = Math.abs(Math.round(n*100)/100);
+    const s = v.toLocaleString('en-US', {minimumFractionDigits:(v%1===0?0:2), maximumFractionDigits:2});
+    return (n >= 0 ? '+$' : '-$') + s;
   }
   function escapeHtml(str){
     const d = document.createElement('div');
@@ -663,37 +949,69 @@
     return d.innerHTML;
   }
 
+  function pushTransaction(item, date, type, amount, note){
+    transactions.push({
+      id: txid(), date, ts: Date.now() + (txCounter++),
+      itemId: item.id, itemName: item.name, icon: item.icon, color: item.color,
+      type, amount, note
+    });
+  }
+
   function defaultItems(eff){
     return [
-      { id: uid(), name: '每日喝水提醒', icon:'💧', color:'#A6C2F2', perCheckin: 5, milestoneCount: 7, milestoneBonus: 20, penaltyPerMiss: 2, checkins: [], missed: [], lastSettledDate: eff },
-      { id: uid(), name: '閱讀 30 分鐘', icon:'📘', color:'#C9A6F2', perCheckin: 10, milestoneCount: 7, milestoneBonus: 50, penaltyPerMiss: 0, checkins: [], missed: [], lastSettledDate: eff },
-      { id: uid(), name: '運動健身', icon:'💪', color:'#F2C49A', perCheckin: 15, milestoneCount: 30, milestoneBonus: 200, penaltyPerMiss: 5, checkins: [], missed: [], lastSettledDate: eff }
+      { id: uid(), name: '每日喝水提醒', icon:'💧', color:'#A6C2F2', perCheckin: 5, milestoneCount: 7, milestoneBonus: 20, penaltyPerMiss: 2, checkins: [], makeup: [], missed: [], cycleProgress:0, earnedTotal:0, lastSettledDate: eff },
+      { id: uid(), name: '閱讀 30 分鐘', icon:'📘', color:'#C9A6F2', perCheckin: 10, milestoneCount: 7, milestoneBonus: 50, penaltyPerMiss: 0, checkins: [], makeup: [], missed: [], cycleProgress:0, earnedTotal:0, lastSettledDate: eff },
+      { id: uid(), name: '運動健身', icon:'💪', color:'#F2C49A', perCheckin: 15, milestoneCount: 30, milestoneBonus: 200, penaltyPerMiss: 5, checkins: [], makeup: [], missed: [], cycleProgress:0, earnedTotal:0, lastSettledDate: eff }
     ];
+  }
+
+  function migrateItem(it, eff, idx){
+    if(!it.icon) it.icon = ICON_ROTATION[idx % ICON_ROTATION.length];
+    if(!it.color) it.color = COLOR_ROTATION[idx % COLOR_ROTATION.length];
+    if(it.makeup === undefined) it.makeup = [];
+    if(it.missed === undefined) it.missed = [];
+    // convert legacy string-array missed -> object array
+    if(it.missed.length && typeof it.missed[0] === 'string'){
+      const rate = Number(it.penaltyPerMiss) || 0;
+      it.missed = it.missed.map(d => ({ date: d, penaltyAmount: rate, refunded: false }));
+    }
+    if(it.cycleProgress === undefined){
+      const ms = Number(it.milestoneCount) || 0;
+      it.cycleProgress = ms > 0 ? ((it.checkins || []).length % ms) : 0;
+    }
+    if(it.earnedTotal === undefined){
+      const count = (it.checkins || []).length;
+      const base = count * (Number(it.perCheckin) || 0);
+      const ms = Number(it.milestoneCount) || 0;
+      const bonus = ms > 0 ? Math.floor(count / ms) * (Number(it.milestoneBonus) || 0) : 0;
+      const penaltyTotal = (it.missed || []).reduce((s,m) => s + (m.penaltyAmount || 0), 0);
+      it.earnedTotal = base + bonus - penaltyTotal;
+      pushTransaction(it, eff, 'opening_balance', it.earnedTotal, '既有累積金額轉入');
+    }
+    if(!it.lastSettledDate) it.lastSettledDate = eff;
   }
 
   async function loadData(){
     const eff = getEffectiveDateStr(new Date());
+
+    try{
+      const txRes = await storageGet(TX_KEY);
+      transactions = (txRes && txRes.value) ? JSON.parse(txRes.value) : [];
+    } catch(e){ transactions = []; }
+
     try{
       const res = await storageGet(STORAGE_KEY);
-      if(res && res.value){
-        items = JSON.parse(res.value);
-        items.forEach((it, idx) => {
-          if(it.missed === undefined) it.missed = [];
-          if(it.penaltyPerMiss === undefined || it.penaltyPerMiss === null) it.penaltyPerMiss = 0;
-          if(!it.lastSettledDate) it.lastSettledDate = eff;
-          if(!it.icon) it.icon = ICON_ROTATION[idx % ICON_ROTATION.length];
-          if(!it.color) it.color = COLOR_ROTATION[idx % COLOR_ROTATION.length];
-        });
-      } else {
-        items = defaultItems(eff);
-      }
+      items = (res && res.value) ? JSON.parse(res.value) : defaultItems(eff);
     } catch(e){
       items = defaultItems(eff);
     }
+    items.forEach((it, idx) => migrateItem(it, eff, idx));
 
-    let changed = false;
-    items.forEach(it => { if(settleItem(it, eff)) changed = true; });
+    await loadCaps();
+    const changed = settleAll(eff);
+
     await saveData();
+    await saveTransactions();
 
     const calRes = await storageGet(CAL_KEY);
     if(calRes && calRes.value){
@@ -701,57 +1019,125 @@
     } else {
       calSelected = items.map(i => i.id);
     }
-    // make sure any newly-seen items are included by default
     items.forEach(it => { if(!calSelected.includes(it.id)) calSelected.push(it.id); });
+
+    await loadGoal();
+    await loadNote();
 
     render();
     renderCalendar();
+    renderLedger();
   }
 
-  function settleItem(item, effectiveToday){
-    let cursor = addDaysStr(item.lastSettledDate, 1);
+  function getWeekStart(dateStr){
+    const [y,m,d] = dateStr.split('-').map(Number);
+    const dt = new Date(y, m-1, d, 12, 0, 0);
+    const dow = dt.getDay(); // 0=Sun..6=Sat
+    const offset = dow === 0 ? 6 : dow - 1; // days since Monday
+    return addDaysStr(dateStr, -offset);
+  }
+
+  // Global settlement: walks every unsettled day across all items in
+  // chronological order so the daily/weekly deduction caps can be applied
+  // across items, not just per item.
+  function settleAll(effectiveToday){
+    if(items.length === 0) return false;
+
+    let minDate = items[0].lastSettledDate;
+    items.forEach(it => { if(it.lastSettledDate < minDate) minDate = it.lastSettledDate; });
+
     let changed = false;
+    let cursor = addDaysStr(minDate, 1);
     let guard = 0;
+    const weeklyTotals = {};
+
+    function ensureWeekSeeded(ws){
+      if(weeklyTotals[ws] !== undefined) return;
+      let sum = 0;
+      items.forEach(it => {
+        it.missed.forEach(m => { if(getWeekStart(m.date) === ws) sum += (m.penaltyAmount || 0); });
+      });
+      weeklyTotals[ws] = sum;
+    }
+
     while(cursor < effectiveToday && guard < 3650){
-      if(!item.checkins.includes(cursor) && !item.missed.includes(cursor)){
-        item.missed.push(cursor);
+      const ws = getWeekStart(cursor);
+      ensureWeekSeeded(ws);
+      let dayTotal = 0;
+      items.forEach(it => { it.missed.forEach(m => { if(m.date === cursor) dayTotal += (m.penaltyAmount || 0); }); });
+
+      items.forEach(item => {
+        if(cursor <= item.lastSettledDate) return; // this day predates the item / already settled
+        const tracked = item.checkins.includes(cursor) || item.makeup.includes(cursor) || item.missed.some(m => m.date === cursor);
+        if(tracked) return;
+
+        const nominal = Number(item.penaltyPerMiss) || 0;
+        let actual = nominal;
+        if(dailyCap > 0) actual = Math.min(actual, Math.max(0, dailyCap - dayTotal));
+        if(weeklyCap > 0) actual = Math.min(actual, Math.max(0, weeklyCap - weeklyTotals[ws]));
+        actual = Math.max(0, actual);
+        const capped = actual < nominal;
+
+        item.missed.push({ date: cursor, penaltyAmount: actual, refunded: false });
+        if(actual > 0){
+          item.earnedTotal -= actual;
+          pushTransaction(item, cursor, 'penalty', -actual, capped ? '未簽到扣款（已達扣款上限）' : '未簽到扣款');
+        } else if(nominal > 0){
+          pushTransaction(item, cursor, 'penalty', 0, '未簽到（已達扣款上限，本次未扣款）');
+        }
+        dayTotal += actual;
+        weeklyTotals[ws] += actual;
         changed = true;
-      }
+      });
+
       cursor = addDaysStr(cursor, 1);
       guard++;
     }
-    if(item.lastSettledDate < addDaysStr(effectiveToday, -1)){
-      item.lastSettledDate = addDaysStr(effectiveToday, -1);
-      changed = true;
-    }
+
+    const target = addDaysStr(effectiveToday, -1);
+    items.forEach(it => {
+      if(it.lastSettledDate < target){ it.lastSettledDate = target; changed = true; }
+    });
+
     return changed;
   }
 
   async function saveData(){ await storageSet(STORAGE_KEY, JSON.stringify(items)); }
+  async function saveTransactions(){ await storageSet(TX_KEY, JSON.stringify(transactions)); }
   async function saveCalSelection(){ await storageSet(CAL_KEY, JSON.stringify(calSelected)); }
+  async function saveAll(){ await saveData(); await saveTransactions(); }
 
-  function calcItemStats(item){
-    const count = item.checkins.length;
-    const base = count * (Number(item.perCheckin) || 0);
-    let bonus = 0;
-    const ms = Number(item.milestoneCount) || 0;
-    if(ms > 0){
-      const hits = Math.floor(count / ms);
-      bonus = hits * (Number(item.milestoneBonus) || 0);
-    }
-    const missedCount = (item.missed || []).length;
-    const penalty = missedCount * (Number(item.penaltyPerMiss) || 0);
-    return { count, missedCount, penalty, total: base + bonus - penalty };
+  function getGrandTotal(){
+    return items.reduce((s, it) => s + (Number(it.earnedTotal) || 0), 0);
   }
+  async function loadGoal(){
+    const r = await storageGet(GOAL_KEY);
+    goalAmount = (r && r.value) ? (parseFloat(r.value) || 0) : 0;
+  }
+  async function saveGoal(){ await storageSet(GOAL_KEY, String(goalAmount)); }
+
+  async function loadCaps(){
+    const r = await storageGet(CAP_KEY);
+    if(r && r.value){
+      try{
+        const obj = JSON.parse(r.value);
+        dailyCap = Number(obj.dailyCap) || 0;
+        weeklyCap = Number(obj.weeklyCap) || 0;
+      } catch(e){ dailyCap = 0; weeklyCap = 0; }
+    } else {
+      dailyCap = 0; weeklyCap = 0;
+    }
+  }
+  async function saveCaps(){ await storageSet(CAP_KEY, JSON.stringify({ dailyCap, weeklyCap })); }
 
   function buildGrid(item, effectiveToday, doneToday){
-    const gridSize = (Number(item.milestoneCount) > 0) ? Number(item.milestoneCount) : 7;
+    const ms = Number(item.milestoneCount) || 0;
+    const gridSize = ms > 0 ? ms : 7;
     const cells = [];
-    if(Number(item.milestoneCount) > 0){
-      const sorted = item.checkins.slice().sort();
-      const count = sorted.length;
-      const filledCount = count % gridSize;
-      const cycleDates = filledCount > 0 ? sorted.slice(count - filledCount) : [];
+    if(ms > 0){
+      const filledCount = Math.max(0, Math.min(item.cycleProgress || 0, gridSize));
+      const count = item.checkins.length;
+      const cycleDates = filledCount > 0 ? item.checkins.slice(count - filledCount) : [];
       for(let i = 0; i < gridSize; i++){
         if(i < filledCount){
           cells.push({ filled: true, date: cycleDates[i] });
@@ -780,15 +1166,19 @@
     let grandTotal = 0, totalCheckinsAll = 0, todayDone = 0, grandPenalty = 0;
 
     items.forEach(item => {
-      const { count, missedCount, penalty, total } = calcItemStats(item);
+      const total = Number(item.earnedTotal) || 0;
+      const count = item.checkins.length;
       grandTotal += total;
       totalCheckinsAll += count;
-      grandPenalty += penalty;
+      const activeMissed = item.missed.filter(m => !m.refunded && m.penaltyAmount > 0);
+      const missedAmt = activeMissed.reduce((s,m) => s + m.penaltyAmount, 0);
+      grandPenalty += missedAmt;
       const doneToday = item.checkins.includes(effectiveToday);
       if(doneToday) todayDone++;
 
       const el = document.createElement('div');
       el.className = 'item';
+      el.setAttribute('data-id', item.id);
 
       const cells = buildGrid(item, effectiveToday, doneToday);
       let gridHtml = '';
@@ -811,9 +1201,12 @@
       el.innerHTML = `
         <div class="stamp-mark" data-stamp>👍</div>
         <div class="item-top">
-          <div>
-            <div class="item-name"><span class="name-swatch" style="background:${item.color}">${escapeHtml(item.icon)}</span>${escapeHtml(item.name)}</div>
-            <div class="item-rule">每次 +${item.perCheckin} 元 ・ ${milestoneText}${penaltyText}</div>
+          <div class="item-top-left">
+            <span class="drag-handle" title="拖曳排序">⠿</span>
+            <div>
+              <div class="item-name"><span class="name-swatch" style="background:${item.color}">${escapeHtml(item.icon)}</span>${escapeHtml(item.name)}</div>
+              <div class="item-rule">每次 +${item.perCheckin} 元 ・ ${milestoneText}${penaltyText}</div>
+            </div>
           </div>
           <div class="item-actions">
             <button class="icon-btn" data-edit="${item.id}" title="編輯">✎</button>
@@ -824,12 +1217,12 @@
           <div class="money-block">
             <div class="money-label">累積 ${count} 次</div>
             <div class="money-value">${fmtMoney(total)}</div>
-            ${missedCount > 0 ? `<div class="money-sub">已扣款 ${missedCount} 次 (-${fmtMoney(penalty).replace('-','').replace('$','')})</div>` : ''}
+            ${activeMissed.length > 0 ? `<div class="money-sub">目前扣款 ${activeMissed.length} 次 (-${fmtMoney(missedAmt).replace('-','').replace('$','')})</div>` : ''}
           </div>
         </div>
         <div class="item-bottom">
-          <button class="checkin-btn" data-checkin="${item.id}" ${doneToday ? 'disabled' : ''}>
-            ${doneToday ? '👍 今日已簽到' : '今日簽到'}
+          <button class="checkin-btn ${doneToday ? 'is-done' : ''}" data-checkin="${item.id}">
+            ${doneToday ? '👍 已簽到（點此取消）' : '今日簽到'}
           </button>
         </div>
       `;
@@ -842,33 +1235,121 @@
     document.getElementById('totalPenalty').textContent = fmtMoney(-grandPenalty);
 
     list.querySelectorAll('[data-checkin]').forEach(btn => {
-      btn.addEventListener('click', () => doCheckin(btn.getAttribute('data-checkin'), btn));
+      btn.addEventListener('click', () => {
+        const id = btn.getAttribute('data-checkin');
+        const item = items.find(i => i.id === id);
+        const eff = getEffectiveDateStr(new Date());
+        if(item && item.checkins.includes(eff)){
+          undoCheckin(id, eff);
+        } else {
+          doCheckin(id, btn);
+        }
+      });
     });
     list.querySelectorAll('[data-edit]').forEach(btn => {
       btn.addEventListener('click', () => openEdit(btn.getAttribute('data-edit')));
     });
   }
 
-  async function doCheckin(id, btnEl){
+  async function doCheckin(id, btnEl, dateOverride){
     const item = items.find(i => i.id === id);
     if(!item) return;
-    const eff = getEffectiveDateStr(new Date());
+    const eff = dateOverride || getEffectiveDateStr(new Date());
     if(item.checkins.includes(eff)) return;
-    item.checkins.push(eff);
-    item.missed = (item.missed || []).filter(d => d !== eff);
-    await saveData();
-    render();
-    renderCalendar();
 
-    const newCard = Array.from(document.querySelectorAll('.item')).find(c => c.querySelector(`[data-checkin="${id}"]`));
-    if(newCard){
-      const s = newCard.querySelector('[data-stamp]');
-      requestAnimationFrame(() => { s.classList.add('play'); });
+    const amt = Number(item.perCheckin) || 0;
+    item.earnedTotal = (Number(item.earnedTotal) || 0) + amt;
+    item.checkins.push(eff);
+    pushTransaction(item, eff, 'checkin', amt, '當日簽到');
+    item.missed = item.missed.filter(m => m.date !== eff);
+
+    item.cycleProgress = (item.cycleProgress || 0) + 1;
+    const ms = Number(item.milestoneCount) || 0;
+    if(ms > 0 && item.cycleProgress >= ms){
+      const bonus = Number(item.milestoneBonus) || 0;
+      item.cycleProgress = 0;
+      if(bonus > 0){
+        item.earnedTotal += bonus;
+        pushTransaction(item, eff, 'milestone', bonus, `達成 ${ms} 次里程碑`);
+      }
+    }
+
+    await saveAll();
+    render(); renderCalendar(); renderLedger();
+    if(currentDayDate === eff) openDayModal(eff);
+
+    if(btnEl){
+      const newCard = Array.from(document.querySelectorAll('.item')).find(c => c.querySelector(`[data-checkin="${id}"]`));
+      if(newCard){
+        const s = newCard.querySelector('[data-stamp]');
+        requestAnimationFrame(() => { s.classList.add('play'); });
+      }
     }
   }
 
+  async function undoCheckin(id, date){
+    const item = items.find(i => i.id === id);
+    if(!item || !item.checkins.includes(date)) return;
+
+    const related = transactions.filter(t => t.itemId === id && t.date === date && (t.type === 'checkin' || t.type === 'milestone'));
+    let sum = 0, hadMilestone = false;
+    related.forEach(t => { sum += t.amount; if(t.type === 'milestone') hadMilestone = true; });
+
+    item.earnedTotal = (Number(item.earnedTotal) || 0) - sum;
+    transactions = transactions.filter(t => !(t.itemId === id && t.date === date && (t.type === 'checkin' || t.type === 'milestone')));
+    item.checkins = item.checkins.filter(d => d !== date);
+
+    const ms = Number(item.milestoneCount) || 0;
+    if(hadMilestone && ms > 0){
+      item.cycleProgress = ms - 1;
+    } else {
+      item.cycleProgress = Math.max(0, (item.cycleProgress || 0) - 1);
+    }
+
+    await saveAll();
+    render(); renderCalendar(); renderLedger();
+    if(currentDayDate === date) openDayModal(date);
+  }
+
+  async function addMakeup(itemId, date){
+    const item = items.find(i => i.id === itemId);
+    if(!item) return;
+    if(item.checkins.includes(date) || item.makeup.includes(date)) return;
+    const m = item.missed.find(x => x.date === date && !x.refunded);
+    if(m){
+      if(m.penaltyAmount > 0){
+        item.earnedTotal = (Number(item.earnedTotal) || 0) + m.penaltyAmount;
+        pushTransaction(item, date, 'refund_penalty', m.penaltyAmount, '補簽退款');
+      }
+      m.refunded = true;
+    }
+    // makeup never adds money or counts toward the points/milestone grid —
+    // it only avoids/refunds a penalty if one existed for that day.
+    item.makeup.push(date);
+    await saveAll();
+    render(); renderCalendar(); renderLedger();
+    if(currentDayDate === date) openDayModal(date);
+  }
+
+  async function removeMakeup(itemId, date){
+    const item = items.find(i => i.id === itemId);
+    if(!item || !item.makeup.includes(date)) return;
+    const m = item.missed.find(x => x.date === date);
+    if(m && m.refunded){
+      if(m.penaltyAmount > 0){
+        item.earnedTotal = (Number(item.earnedTotal) || 0) - m.penaltyAmount;
+        pushTransaction(item, date, 'penalty', -m.penaltyAmount, '取消補簽，恢復扣款');
+      }
+      m.refunded = false;
+    }
+    item.makeup = item.makeup.filter(d => d !== date);
+    await saveAll();
+    render(); renderCalendar(); renderLedger();
+    if(currentDayDate === date) openDayModal(date);
+  }
+
   // ---------- Calendar ----------
-  let calYear, calMonth; // calMonth: 0-indexed
+  let calYear, calMonth;
   (function initCalDate(){
     const now = new Date();
     calYear = now.getFullYear();
@@ -876,9 +1357,7 @@
   })();
 
   function renderCalendar(){
-    const titleEl = document.getElementById('calTitle');
-    titleEl.textContent = `${calYear}年${calMonth + 1}月`;
-
+    document.getElementById('calTitle').textContent = `${calYear}年${calMonth + 1}月`;
     const body = document.getElementById('calBody');
     const visibleItems = items.filter(it => calSelected.includes(it.id));
 
@@ -908,10 +1387,12 @@
       let badges = '';
       visibleItems.forEach(it => {
         if(it.checkins.includes(ds)){
-          badges += `<div class="cal-badge" style="background:${it.color}" title="${escapeHtml(it.name)}">${escapeHtml(it.icon)}</div>`;
+          badges += `<div class="cal-badge" style="background:${it.color}" title="${escapeHtml(it.name)}：當日簽到">${escapeHtml(it.icon)}</div>`;
+        } else if(it.makeup.includes(ds)){
+          badges += `<div class="cal-badge makeup" style="color:${it.color}" title="${escapeHtml(it.name)}：補簽（不計積點）">${escapeHtml(it.icon)}</div>`;
         }
       });
-      html += `<div class="cal-day ${isToday ? 'today' : ''}">
+      html += `<div class="cal-day has-day ${isToday ? 'today' : ''}" data-day="${ds}">
           <div class="cal-daynum">${day}</div>
           <div class="cal-badges">${badges}</div>
         </div>`;
@@ -919,6 +1400,10 @@
 
     html += '</div>';
     body.innerHTML = html;
+
+    body.querySelectorAll('[data-day]').forEach(cell => {
+      cell.addEventListener('click', () => openDayModal(cell.getAttribute('data-day')));
+    });
 
     renderCalFilterList();
   }
@@ -984,7 +1469,270 @@
     renderCalendar();
   });
 
-  // ---------- Modal logic ----------
+  // ---------- Day detail modal ----------
+  const dayModalOverlay = document.getElementById('dayModalOverlay');
+  const dayModalTitle = document.getElementById('dayModalTitle');
+  const dayModalList = document.getElementById('dayModalList');
+
+  function dayStatus(item, dateStr, effectiveToday){
+    if(dateStr > effectiveToday){
+      return { label: '尚未到這天', action: null };
+    }
+    if(item.checkins.includes(dateStr)){
+      return { label: dateStr === effectiveToday ? '✅ 今日已簽到（計入積點）' : '✅ 當日已簽到（計入積點）', action: 'undo', actionLabel: '取消簽到' };
+    }
+    if(item.makeup.includes(dateStr)){
+      return { label: '🩹 已補簽（不計入積點，不扣款）', action: 'removeMakeup', actionLabel: '取消補簽' };
+    }
+    if(dateStr === effectiveToday){
+      return { label: '尚未簽到', action: 'checkin', actionLabel: '簽到' };
+    }
+    // any past day with no record (was missed & penalised, or just an empty/cancelled day) —
+    // makeup never counts toward points, it only clears/avoids the penalty.
+    const m = item.missed.find(x => x.date === dateStr && !x.refunded);
+    if(m && m.penaltyAmount > 0){
+      return { label: `❌ 未簽到（已扣 ${fmtMoney(m.penaltyAmount).replace('-','')}）`, action: 'makeup', actionLabel: '補簽（退扣款，不計積點）' };
+    }
+    return { label: '（尚無紀錄）', action: 'makeup', actionLabel: '補簽（不計入積點）' };
+  }
+
+  function openDayModal(dateStr){
+    currentDayDate = dateStr;
+    const parts = dateStr.split('-');
+    dayModalTitle.textContent = `${parts[0]}/${parseInt(parts[1])}/${parseInt(parts[2])}`;
+    const effectiveToday = getEffectiveDateStr(new Date());
+
+    dayModalList.innerHTML = '';
+    if(items.length === 0){
+      dayModalList.innerHTML = '<div class="empty-state">尚無項目</div>';
+    }
+    items.forEach(item => {
+      const st = dayStatus(item, dateStr, effectiveToday);
+      const row = document.createElement('div');
+      row.className = 'day-modal-row';
+      let actionHtml = '';
+      if(st.action){
+        actionHtml = `<button class="day-action-btn day-action-${st.action}" data-act="${st.action}" data-item="${item.id}">${st.actionLabel}</button>`;
+      }
+      row.innerHTML = `
+        <div class="day-modal-info">
+          <span class="name-swatch" style="background:${item.color}">${escapeHtml(item.icon)}</span>
+          <div class="day-modal-text">
+            <div class="day-modal-name">${escapeHtml(item.name)}</div>
+            <div class="day-modal-status">${st.label}</div>
+          </div>
+        </div>
+        ${actionHtml}
+      `;
+      dayModalList.appendChild(row);
+    });
+
+    dayModalList.querySelectorAll('[data-act]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const act = btn.getAttribute('data-act');
+        const itemId = btn.getAttribute('data-item');
+        if(act === 'checkin') doCheckin(itemId, null, dateStr);
+        else if(act === 'undo') undoCheckin(itemId, dateStr);
+        else if(act === 'makeup') addMakeup(itemId, dateStr);
+        else if(act === 'removeMakeup') removeMakeup(itemId, dateStr);
+      });
+    });
+
+    dayModalOverlay.classList.add('open');
+  }
+  document.getElementById('dayModalClose').addEventListener('click', () => {
+    dayModalOverlay.classList.remove('open');
+    currentDayDate = null;
+  });
+  dayModalOverlay.addEventListener('click', (e) => {
+    if(e.target === dayModalOverlay){ dayModalOverlay.classList.remove('open'); currentDayDate = null; }
+  });
+
+  // ---------- Ledger (money log) ----------
+  function renderLedgerSummary(){
+    const total = getGrandTotal();
+    document.getElementById('summaryTotal').textContent = fmtMoney(total);
+
+    const goalEl = document.getElementById('summaryGoal');
+    const fillEl = document.getElementById('progressFill');
+    const pctEl = document.getElementById('progressPercent');
+
+    if(goalAmount > 0){
+      goalEl.textContent = fmtMoney(goalAmount);
+      const pct = (total / goalAmount) * 100;
+      const pctDisplay = Math.round(pct * 10) / 10;
+      pctEl.textContent = pctDisplay + '%';
+      fillEl.style.width = Math.max(0, Math.min(100, pct)) + '%';
+    } else {
+      goalEl.textContent = '尚未設定';
+      pctEl.textContent = '—';
+      fillEl.style.width = '0%';
+    }
+
+    const capEl = document.getElementById('summaryCap');
+    if(dailyCap > 0 || weeklyCap > 0){
+      const parts = [];
+      if(dailyCap > 0) parts.push('單日 ' + fmtMoney(dailyCap));
+      if(weeklyCap > 0) parts.push('單週 ' + fmtMoney(weeklyCap));
+      capEl.textContent = parts.join(' ／ ');
+    } else {
+      capEl.textContent = '未設定';
+    }
+  }
+
+  function renderLedger(){
+    renderLedgerSummary();
+    const body = document.getElementById('ledgerBody');
+    if(transactions.length === 0){
+      body.innerHTML = '<div class="empty-state">尚無金錢紀錄</div>';
+      return;
+    }
+    const sorted = transactions.slice().sort((a,b) => b.ts - a.ts);
+    let html = '';
+    sorted.forEach(t => {
+      const cls = t.amount >= 0 ? 'amt-pos' : 'amt-neg';
+      const typeLabel = TYPE_LABELS[t.type] || t.type;
+      html += `<div class="ledger-row">
+          <div class="ledger-date">${formatShort(t.date)}</div>
+          <div class="ledger-item">
+            <span class="cal-swatch" style="background:${t.color}">${escapeHtml(t.icon)}</span>
+            <span class="nm">${escapeHtml(t.itemName)}</span>
+          </div>
+          <div class="ledger-type">${typeLabel}</div>
+          <div class="ledger-amt ${cls}">${fmtSigned(t.amount)}</div>
+        </div>`;
+    });
+    body.innerHTML = html;
+  }
+
+  // ---------- Tabs ----------
+  const tabCheckinBtn = document.getElementById('tabCheckinBtn');
+  const tabLedgerBtn = document.getElementById('tabLedgerBtn');
+  const viewCheckin = document.getElementById('viewCheckin');
+  const viewLedger = document.getElementById('viewLedger');
+  tabCheckinBtn.addEventListener('click', () => {
+    tabCheckinBtn.classList.add('active'); tabLedgerBtn.classList.remove('active');
+    viewCheckin.classList.remove('hidden'); viewLedger.classList.add('hidden');
+  });
+  tabLedgerBtn.addEventListener('click', () => {
+    tabLedgerBtn.classList.add('active'); tabCheckinBtn.classList.remove('active');
+    viewLedger.classList.remove('hidden'); viewCheckin.classList.add('hidden');
+    renderLedger();
+  });
+
+  // ---------- Goal amount modal ----------
+  const goalModalOverlay = document.getElementById('goalModalOverlay');
+  const fGoal = document.getElementById('fGoal');
+  document.getElementById('editGoalBtn').addEventListener('click', () => {
+    fGoal.value = goalAmount > 0 ? goalAmount : '';
+    goalModalOverlay.classList.add('open');
+    setTimeout(() => fGoal.focus(), 50);
+  });
+  document.getElementById('goalCancelBtn').addEventListener('click', () => {
+    goalModalOverlay.classList.remove('open');
+  });
+  document.getElementById('goalSaveBtn').addEventListener('click', async () => {
+    goalAmount = parseFloat(fGoal.value) || 0;
+    await saveGoal();
+    renderLedgerSummary();
+    goalModalOverlay.classList.remove('open');
+  });
+  goalModalOverlay.addEventListener('click', (e) => { if(e.target === goalModalOverlay) goalModalOverlay.classList.remove('open'); });
+
+  // ---------- Daily / weekly deduction cap modal ----------
+  const capModalOverlay = document.getElementById('capModalOverlay');
+  const fDailyCap = document.getElementById('fDailyCap');
+  const fWeeklyCap = document.getElementById('fWeeklyCap');
+  document.getElementById('editCapBtn').addEventListener('click', () => {
+    fDailyCap.value = dailyCap > 0 ? dailyCap : '';
+    fWeeklyCap.value = weeklyCap > 0 ? weeklyCap : '';
+    capModalOverlay.classList.add('open');
+    setTimeout(() => fDailyCap.focus(), 50);
+  });
+  document.getElementById('capCancelBtn').addEventListener('click', () => {
+    capModalOverlay.classList.remove('open');
+  });
+  document.getElementById('capSaveBtn').addEventListener('click', async () => {
+    dailyCap = parseFloat(fDailyCap.value) || 0;
+    weeklyCap = parseFloat(fWeeklyCap.value) || 0;
+    await saveCaps();
+    renderLedgerSummary();
+    capModalOverlay.classList.remove('open');
+  });
+  capModalOverlay.addEventListener('click', (e) => { if(e.target === capModalOverlay) capModalOverlay.classList.remove('open'); });
+
+  // ---------- Subtitle note (editable text under the title) ----------
+  const NOTE_KEY = 'checkin-passbook-note';
+  const DEFAULT_NOTE = '每日凌晨 4:00 結算前一日狀況，未簽到將自動扣款';
+  let coverNote = DEFAULT_NOTE;
+  async function loadNote(){
+    const r = await storageGet(NOTE_KEY);
+    coverNote = (r && r.value) ? r.value : DEFAULT_NOTE;
+    document.getElementById('resetNoteText').textContent = coverNote;
+  }
+  async function saveNote(){ await storageSet(NOTE_KEY, coverNote); }
+
+  const noteModalOverlay = document.getElementById('noteModalOverlay');
+  const fNote = document.getElementById('fNote');
+  document.getElementById('editNoteBtn').addEventListener('click', () => {
+    fNote.value = coverNote;
+    noteModalOverlay.classList.add('open');
+    setTimeout(() => fNote.focus(), 50);
+  });
+  document.getElementById('noteCancelBtn').addEventListener('click', () => {
+    noteModalOverlay.classList.remove('open');
+  });
+  document.getElementById('noteSaveBtn').addEventListener('click', async () => {
+    coverNote = fNote.value.trim() || DEFAULT_NOTE;
+    document.getElementById('resetNoteText').textContent = coverNote;
+    await saveNote();
+    noteModalOverlay.classList.remove('open');
+  });
+  noteModalOverlay.addEventListener('click', (e) => { if(e.target === noteModalOverlay) noteModalOverlay.classList.remove('open'); });
+
+  // ---------- Drag-to-reorder items (pointer events: works for mouse & touch) ----------
+  const itemsListEl = document.getElementById('itemsList');
+  let dragEl = null;
+
+  itemsListEl.addEventListener('pointerdown', (e) => {
+    const handle = e.target.closest('.drag-handle');
+    if(!handle) return;
+    const itemEl = handle.closest('.item');
+    if(!itemEl) return;
+    e.preventDefault();
+    dragEl = itemEl;
+    dragEl.classList.add('dragging');
+    document.addEventListener('pointermove', onDragMove);
+    document.addEventListener('pointerup', onDragEnd);
+  });
+
+  function onDragMove(e){
+    if(!dragEl) return;
+    e.preventDefault();
+    const siblings = Array.from(itemsListEl.querySelectorAll('.item')).filter(el => el !== dragEl);
+    for(const sib of siblings){
+      const rect = sib.getBoundingClientRect();
+      if(e.clientY > rect.top && e.clientY < rect.bottom){
+        const before = e.clientY < rect.top + rect.height / 2;
+        itemsListEl.insertBefore(dragEl, before ? sib : sib.nextSibling);
+        break;
+      }
+    }
+  }
+
+  async function onDragEnd(){
+    document.removeEventListener('pointermove', onDragMove);
+    document.removeEventListener('pointerup', onDragEnd);
+    if(!dragEl) return;
+    dragEl.classList.remove('dragging');
+    const newOrderIds = Array.from(itemsListEl.querySelectorAll('.item')).map(el => el.getAttribute('data-id'));
+    items = newOrderIds.map(id => items.find(it => it.id === id)).filter(Boolean);
+    dragEl = null;
+    await saveData();
+    render();
+  }
+
+  // ---------- Add/Edit item modal ----------
   const overlay = document.getElementById('modalOverlay');
   const modalTitle = document.getElementById('modalTitle');
   const fName = document.getElementById('fName');
@@ -1035,10 +1783,7 @@
 
   async function saveModal(){
     const name = fName.value.trim();
-    if(!name){
-      fName.focus();
-      return;
-    }
+    if(!name){ fName.focus(); return; }
     const icon = fIcon.value.trim() || '👍';
     const color = fColor.value || '#E85C8A';
     const per = parseFloat(fPer.value) || 0;
@@ -1047,6 +1792,7 @@
     const penalty = fPenalty.value ? parseFloat(fPenalty.value) : 0;
 
     if(editingId){
+      // editing only changes future-facing rules; earnedTotal / history untouched
       const item = items.find(i => i.id === editingId);
       if(item){
         item.name = name;
@@ -1060,11 +1806,10 @@
     } else {
       const eff = getEffectiveDateStr(new Date());
       const newItem = {
-        id: uid(),
-        name, icon, color, perCheckin: per,
-        milestoneCount: mCount, milestoneBonus: mBonus,
-        penaltyPerMiss: penalty,
-        checkins: [], missed: [], lastSettledDate: eff
+        id: uid(), name, icon, color, perCheckin: per,
+        milestoneCount: mCount, milestoneBonus: mBonus, penaltyPerMiss: penalty,
+        checkins: [], makeup: [], missed: [], cycleProgress: 0, earnedTotal: 0,
+        lastSettledDate: eff
       };
       items.push(newItem);
       calSelected.push(newItem.id);
@@ -1072,8 +1817,7 @@
     }
     await saveData();
     closeModal();
-    render();
-    renderCalendar();
+    render(); renderCalendar(); renderLedger();
   }
 
   async function deleteCurrent(){
@@ -1083,8 +1827,7 @@
     await saveData();
     await saveCalSelection();
     closeModal();
-    render();
-    renderCalendar();
+    render(); renderCalendar(); renderLedger();
   }
 
   document.getElementById('openAddBtn').addEventListener('click', openAdd);
