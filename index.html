@@ -151,6 +151,7 @@
   }
   .add-btn:hover{transform:translateY(-1px);}
   .add-btn:active{transform:translateY(0);}
+  .add-btn.armed{background:var(--penalty) !important;}
 
   /* ---------- Item row ---------- */
   .items{display:flex; flex-direction:column; gap:14px;}
@@ -508,12 +509,22 @@
   }
   .ledger-row{
     display:grid;
-    grid-template-columns:54px 1fr 92px 86px;
+    grid-template-columns:54px 1fr 92px 86px 28px;
     gap:8px;
     align-items:center;
     padding:11px 4px;
     border-bottom:1px solid var(--line);
     font-size:12.5px;
+  }
+  .ledger-del-btn{
+    background:none; border:none; cursor:pointer;
+    font-size:13px; color:var(--ink-soft); padding:2px;
+    border-radius:6px; white-space:nowrap;
+  }
+  .ledger-del-btn:hover{color:var(--penalty);}
+  .ledger-del-btn.armed{
+    color:var(--penalty); font-size:10px; font-weight:700;
+    background:#FFF1F5; padding:4px 6px;
   }
   .ledger-row:last-child{border-bottom:none;}
   .ledger-date{font-family:'JetBrains Mono',monospace; color:var(--ink-soft); font-size:11px;}
@@ -625,7 +636,7 @@
     .cover h1{font-size:24px;}
     .stat-value{font-size:19px;}
     .cal-day{min-height:46px;}
-    .ledger-row{grid-template-columns:48px 1fr 78px; font-size:11.5px;}
+    .ledger-row{grid-template-columns:48px 1fr 78px 26px; font-size:11.5px;}
     .ledger-type{display:none;}
   }
 </style>
@@ -718,6 +729,7 @@
         <h2>金錢紀錄明細</h2>
         <div class="sub">每一筆收入、獎金與扣款都會記錄在這裡</div>
       </div>
+      <button class="add-btn" id="clearLedgerBtn" style="background:var(--ink-soft);">清空紀錄列表</button>
     </div>
     <div class="ledger-summary">
       <div class="summary-block">
@@ -998,6 +1010,9 @@
       const txRes = await storageGet(TX_KEY);
       transactions = (txRes && txRes.value) ? JSON.parse(txRes.value) : [];
     } catch(e){ transactions = []; }
+    // one-time cleanup: earlier versions logged $0 entries (e.g. a checkin worth
+    // $0, or a cap-blocked penalty) which are just noise now that those are skipped.
+    transactions = transactions.filter(t => t.amount !== 0 || t.type === 'opening_balance');
 
     try{
       const res = await storageGet(STORAGE_KEY);
@@ -1082,8 +1097,6 @@
         if(actual > 0){
           item.earnedTotal -= actual;
           pushTransaction(item, cursor, 'penalty', -actual, capped ? '未簽到扣款（已達扣款上限）' : '未簽到扣款');
-        } else if(nominal > 0){
-          pushTransaction(item, cursor, 'penalty', 0, '未簽到（已達扣款上限，本次未扣款）');
         }
         dayTotal += actual;
         weeklyTotals[ws] += actual;
@@ -1216,7 +1229,7 @@
           <div class="grid">${gridHtml}</div>
           <div class="money-block">
             <div class="money-label">累積 ${count} 次</div>
-            <div class="money-value">${fmtMoney(total)}</div>
+            <div class="money-value" style="${total < 0 ? 'color:var(--penalty);' : ''}">${fmtMoney(total)}</div>
             ${activeMissed.length > 0 ? `<div class="money-sub">目前扣款 ${activeMissed.length} 次 (-${fmtMoney(missedAmt).replace('-','').replace('$','')})</div>` : ''}
           </div>
         </div>
@@ -1229,7 +1242,9 @@
       list.appendChild(el);
     });
 
-    document.getElementById('totalMoney').textContent = fmtMoney(grandTotal);
+    const totalMoneyEl = document.getElementById('totalMoney');
+    totalMoneyEl.textContent = fmtMoney(grandTotal);
+    totalMoneyEl.style.color = grandTotal < 0 ? 'var(--penalty)' : '';
     document.getElementById('todayCount').textContent = `${todayDone} / ${items.length}`;
     document.getElementById('totalCheckins').textContent = totalCheckinsAll;
     document.getElementById('totalPenalty').textContent = fmtMoney(-grandPenalty);
@@ -1260,7 +1275,9 @@
     const amt = Number(item.perCheckin) || 0;
     item.earnedTotal = (Number(item.earnedTotal) || 0) + amt;
     item.checkins.push(eff);
-    pushTransaction(item, eff, 'checkin', amt, '當日簽到');
+    if(amt > 0){
+      pushTransaction(item, eff, 'checkin', amt, '當日簽到');
+    }
     item.missed = item.missed.filter(m => m.date !== eff);
 
     item.cycleProgress = (item.cycleProgress || 0) + 1;
@@ -1270,7 +1287,11 @@
       item.cycleProgress = 0;
       if(bonus > 0){
         item.earnedTotal += bonus;
-        pushTransaction(item, eff, 'milestone', bonus, `達成 ${ms} 次里程碑`);
+        const cycleDates = item.checkins.slice(Math.max(0, item.checkins.length - ms));
+        const rangeNote = cycleDates.length > 1
+          ? `${formatShort(cycleDates[0])}～${formatShort(cycleDates[cycleDates.length - 1])} 完成 ${ms} 次`
+          : `達成 ${ms} 次里程碑`;
+        pushTransaction(item, eff, 'milestone', bonus, rangeNote);
       }
     }
 
@@ -1551,7 +1572,9 @@
   // ---------- Ledger (money log) ----------
   function renderLedgerSummary(){
     const total = getGrandTotal();
-    document.getElementById('summaryTotal').textContent = fmtMoney(total);
+    const summaryTotalEl = document.getElementById('summaryTotal');
+    summaryTotalEl.textContent = fmtMoney(total);
+    summaryTotalEl.style.color = total < 0 ? 'var(--penalty)' : '';
 
     const goalEl = document.getElementById('summaryGoal');
     const fillEl = document.getElementById('progressFill');
@@ -1600,9 +1623,44 @@
           </div>
           <div class="ledger-type">${typeLabel}</div>
           <div class="ledger-amt ${cls}">${fmtSigned(t.amount)}</div>
+          <button class="ledger-del-btn" data-del="${t.id}" title="刪除這筆紀錄">🗑</button>
         </div>`;
     });
     body.innerHTML = html;
+
+    body.querySelectorAll('[data-del]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if(btn.classList.contains('armed')){
+          deleteTransaction(btn.getAttribute('data-del'));
+        } else {
+          btn.classList.add('armed');
+          btn.textContent = '確定？';
+          setTimeout(() => {
+            btn.classList.remove('armed');
+            btn.textContent = '🗑';
+          }, 3000);
+        }
+      });
+    });
+  }
+
+  async function deleteTransaction(txId){
+    const idx = transactions.findIndex(t => t.id === txId);
+    if(idx === -1) return;
+    const tx = transactions[idx];
+    if(tx.amount){
+      const item = items.find(i => i.id === tx.itemId);
+      if(item) item.earnedTotal = (Number(item.earnedTotal) || 0) - tx.amount;
+    }
+    transactions.splice(idx, 1);
+    await saveAll();
+    render(); renderCalendar(); renderLedger();
+  }
+
+  async function clearAllTransactions(){
+    transactions = [];
+    await saveTransactions();
+    renderLedger();
   }
 
   // ---------- Tabs ----------
@@ -1618,6 +1676,22 @@
     tabLedgerBtn.classList.add('active'); tabCheckinBtn.classList.remove('active');
     viewLedger.classList.remove('hidden'); viewCheckin.classList.add('hidden');
     renderLedger();
+  });
+
+  const clearLedgerBtn = document.getElementById('clearLedgerBtn');
+  clearLedgerBtn.addEventListener('click', () => {
+    if(clearLedgerBtn.classList.contains('armed')){
+      clearAllTransactions();
+      clearLedgerBtn.classList.remove('armed');
+      clearLedgerBtn.textContent = '清空紀錄列表';
+    } else {
+      clearLedgerBtn.classList.add('armed');
+      clearLedgerBtn.textContent = '確定清空全部？';
+      setTimeout(() => {
+        clearLedgerBtn.classList.remove('armed');
+        clearLedgerBtn.textContent = '清空紀錄列表';
+      }, 3000);
+    }
   });
 
   // ---------- Goal amount modal ----------
