@@ -451,6 +451,23 @@
   .cal-legend span{display:inline-flex; align-items:center; gap:4px;}
   .legend-dot{width:10px;height:10px;border-radius:50%; display:inline-block;}
 
+  /* ---------- Weekly / Monthly miss stats ---------- */
+  .stat-week-cols{display:flex; gap:16px; flex-wrap:wrap;}
+  .stat-col{flex:1; min-width:200px;}
+  .stat-col-title{
+    font-size:12px; font-weight:700; color:var(--ink-soft);
+    margin-bottom:8px; font-family:'JetBrains Mono',monospace;
+  }
+  .stat-item-row{
+    display:flex; align-items:center; gap:8px;
+    padding:7px 2px; font-size:12.5px;
+    border-bottom:1px solid var(--line);
+  }
+  .stat-item-row:last-child{border-bottom:none;}
+  .stat-item-name{flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .stat-item-count{font-family:'JetBrains Mono',monospace; font-weight:700; color:var(--penalty); flex-shrink:0;}
+  .stat-empty{font-size:12px; color:var(--ink-soft); padding:8px 2px;}
+
   /* ---------- Ledger summary (total + goal) ---------- */
   .ledger-summary{
     display:flex;
@@ -500,22 +517,94 @@
   }
   .edit-goal-btn:hover{color:var(--primary-dark);}
 
-  /* ---------- Ledger (money log) ---------- */
+  /* ---------- Rewards shelf ---------- */
+  .rewards-section{margin-bottom:22px;}
+  .rewards-scroll{
+    display:flex;
+    gap:12px;
+    overflow-x:auto;
+    padding-bottom:6px;
+  }
+  .reward-card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:12px;
+    width:150px;
+    flex-shrink:0;
+    cursor:pointer;
+    transition:transform .12s ease;
+  }
+  .reward-card:hover{transform:translateY(-2px);}
+  .reward-img{
+    width:100%; height:90px; object-fit:cover;
+    border-radius:10px; margin-bottom:8px;
+    background:var(--primary-light);
+  }
+  .reward-img-empty{
+    display:flex; align-items:center; justify-content:center;
+    font-size:28px;
+  }
+  .reward-name{
+    font-family:'Noto Serif TC', serif;
+    font-weight:700;
+    font-size:13.5px;
+    color:var(--ink);
+    margin-bottom:2px;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+  .reward-amount{
+    font-family:'JetBrains Mono', monospace;
+    font-size:13px;
+    font-weight:700;
+    color:var(--money);
+    margin-bottom:8px;
+  }
+  .reward-progress-track{
+    width:100%; height:8px; border-radius:99px;
+    background:var(--primary-light); overflow:hidden; margin-bottom:5px;
+  }
+  .reward-progress-fill{
+    height:100%; border-radius:99px;
+    background:linear-gradient(90deg, var(--primary), var(--primary-dark));
+    width:0%;
+  }
+  .reward-progress-label{font-size:10.5px; color:var(--ink-soft); font-family:'JetBrains Mono',monospace;}
+  .reward-add-card{
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    color:var(--primary-dark); font-weight:700; font-size:13px;
+    border:1.5px dashed var(--primary); background:#FFF6FA;
+    text-align:center; line-height:1.6;
+  }
+
+  /* ---------- Ledger (money log, grouped by day) ---------- */
   .ledger-card{
     background:var(--card);
     border:1px solid var(--line);
     border-radius:14px;
     padding:8px 16px;
   }
-  .ledger-row{
+  .ledger-day-row{
     display:grid;
-    grid-template-columns:54px 1fr 92px 86px 28px;
+    grid-template-columns:64px 1fr 1fr 1fr 18px;
     gap:8px;
     align-items:center;
-    padding:11px 4px;
+    padding:13px 4px;
     border-bottom:1px solid var(--line);
     font-size:12.5px;
+    cursor:pointer;
   }
+  .ledger-day-row:last-child{border-bottom:none;}
+  .ledger-day-row:hover{background:#FFF9FB;}
+  .ledger-day-date{
+    font-family:'JetBrains Mono',monospace; font-weight:700; color:var(--ink);
+    display:flex; flex-direction:column; line-height:1.3;
+  }
+  .ledger-day-year{font-size:9.5px; color:var(--ink-soft); font-weight:400;}
+  .ledger-day-income{font-family:'JetBrains Mono',monospace; font-weight:700; color:var(--money); text-align:right;}
+  .ledger-day-expense{font-family:'JetBrains Mono',monospace; font-weight:700; color:var(--penalty); text-align:right;}
+  .ledger-day-net{font-family:'JetBrains Mono',monospace; font-weight:700; text-align:right;}
+  .ledger-day-arrow{color:var(--ink-soft); text-align:center;}
   .ledger-del-btn{
     background:none; border:none; cursor:pointer;
     font-size:13px; color:var(--ink-soft); padding:2px;
@@ -526,11 +615,6 @@
     color:var(--penalty); font-size:10px; font-weight:700;
     background:#FFF1F5; padding:4px 6px;
   }
-  .ledger-row:last-child{border-bottom:none;}
-  .ledger-date{font-family:'JetBrains Mono',monospace; color:var(--ink-soft); font-size:11px;}
-  .ledger-item{display:flex; align-items:center; gap:6px; min-width:0;}
-  .ledger-item span.nm{overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
-  .ledger-type{font-size:11px; color:var(--ink-soft);}
   .ledger-amt{font-family:'JetBrains Mono',monospace; font-weight:700; text-align:right;}
   .amt-pos{color:var(--money);}
   .amt-neg{color:var(--penalty);}
@@ -582,6 +666,7 @@
     font-family:'Noto Sans TC',sans-serif;
   }
   .field input[type=color]{padding:4px; height:40px;}
+  .field input[type=file]{padding:8px 6px; font-size:12.5px;}
   .field input:focus{outline:2px solid var(--primary); outline-offset:1px;}
   .field-row{display:flex; gap:10px;}
   .field-row .field{flex:1;}
@@ -636,8 +721,8 @@
     .cover h1{font-size:24px;}
     .stat-value{font-size:19px;}
     .cal-day{min-height:46px;}
-    .ledger-row{grid-template-columns:48px 1fr 78px 26px; font-size:11.5px;}
-    .ledger-type{display:none;}
+    .ledger-day-row{grid-template-columns:52px 1fr 1fr 1fr 16px; font-size:11px;}
+    .stat-week-cols{gap:10px;}
   }
 </style>
 </head>
@@ -720,14 +805,47 @@
           <span><span class="legend-dot" style="border:1.5px dashed var(--primary); background:#fff;"></span>補簽（不計積點）</span>
         </div>
       </div>
+
+      <div class="cal-card" style="margin-top:14px;">
+        <div class="section-title" style="margin:0 0 12px;">
+          <div>
+            <h2 style="font-size:15px;">📊 本週 / 上週 未達成統計</h2>
+            <div class="sub">只顯示這兩週的缺漏，做為近期提醒</div>
+          </div>
+        </div>
+        <div id="weeklyStatsBody"></div>
+      </div>
+
+      <div class="cal-card" style="margin-top:14px;">
+        <div class="cal-header">
+          <div class="cal-nav">
+            <button id="statMonthPrev">◀</button>
+            <div class="cal-title" id="statMonthTitle">2026年6月</div>
+            <button id="statMonthNext">▶</button>
+          </div>
+          <div style="font-size:11.5px;color:var(--ink-soft);">📁 每月未達成統計（永久保存）</div>
+        </div>
+        <div id="monthlyStatsBody"></div>
+      </div>
     </div>
   </div>
 
   <div class="view hidden" id="viewLedger">
+    <div class="rewards-section">
+      <div class="section-title" style="margin-top:0;">
+        <div>
+          <h2>🎁 獎勵目標</h2>
+          <div class="sub">上傳你想要的獎勵照片和金額，隨時看看存了多少</div>
+        </div>
+        <button class="add-btn" id="openRewardAddBtn">＋ 新增獎勵</button>
+      </div>
+      <div class="rewards-scroll" id="rewardsScroll"></div>
+    </div>
+
     <div class="section-title">
       <div>
         <h2>金錢紀錄明細</h2>
-        <div class="sub">每一筆收入、獎金與扣款都會記錄在這裡</div>
+        <div class="sub">以日為單位顯示，點開任一天可看到當天詳細收支</div>
       </div>
       <button class="add-btn" id="clearLedgerBtn" style="background:var(--ink-soft);">清空紀錄列表</button>
     </div>
@@ -815,6 +933,18 @@
   </div>
 </div>
 
+<!-- Ledger day detail modal (all income/expense for one day) -->
+<div class="modal-overlay" id="ledgerDayModalOverlay">
+  <div class="modal wide">
+    <h3 id="ledgerDayModalTitle">2026/6/19</h3>
+    <div class="day-modal-list" id="ledgerDayModalList"></div>
+    <div class="modal-actions">
+      <div></div>
+      <button class="btn btn-secondary" id="ledgerDayModalClose">關閉</button>
+    </div>
+  </div>
+</div>
+
 <!-- Subtitle note edit modal -->
 <div class="modal-overlay" id="noteModalOverlay">
   <div class="modal">
@@ -867,12 +997,42 @@
         <input type="number" id="fWeeklyCap" placeholder="例如：30" min="0" step="0.1">
       </div>
     </div>
-    <div class="field-hint">單日上限會限制所有項目「同一天」加總被扣的金額；單週上限以禮拜一為一週的開始，限制整週加總被扣的金額。留空或填 0 表示不設上限。</div>
+    <div class="field-hint">單日上限會限制所有項目「同一天」加總被扣的金額；單週上限以禮拜一為一週的開始，限制整週加總被扣的金額。留空或填 0 表示不設上限。實際被擋下的扣款仍會完整記錄在金錢紀錄裡。</div>
     <div class="modal-actions">
       <div></div>
       <div style="display:flex; gap:8px;">
         <button class="btn btn-secondary" id="capCancelBtn">取消</button>
         <button class="btn btn-primary" id="capSaveBtn">儲存</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Reward add/edit modal -->
+<div class="modal-overlay" id="rewardModalOverlay">
+  <div class="modal">
+    <h3 id="rewardModalTitle">新增獎勵</h3>
+    <div class="field">
+      <label for="fRewardImage">獎勵照片</label>
+      <input type="file" id="fRewardImage" accept="image/*">
+    </div>
+    <div id="rewardImgPreviewWrap" style="display:none; margin-bottom:14px;">
+      <img id="rewardImgPreview" style="width:100%; border-radius:10px; max-height:180px; object-fit:cover; display:block;">
+    </div>
+    <div class="field">
+      <label for="fRewardName">獎勵名稱</label>
+      <input type="text" id="fRewardName" placeholder="例如：無線耳機">
+    </div>
+    <div class="field">
+      <label for="fRewardAmount">需要金額（元）</label>
+      <input type="number" id="fRewardAmount" placeholder="例如：2000" min="0" step="1">
+    </div>
+    <div class="field-hint">存到的金額會跟「總累積金額」比較，達成時會顯示 🎉。照片建議 4MB 以下。</div>
+    <div class="modal-actions">
+      <button class="btn btn-danger" id="deleteRewardBtn" style="display:none;">刪除此獎勵</button>
+      <div style="margin-left:auto; display:flex; gap:8px;">
+        <button class="btn btn-secondary" id="rewardCancelBtn">取消</button>
+        <button class="btn btn-primary" id="rewardSaveBtn">儲存</button>
       </div>
     </div>
   </div>
@@ -885,6 +1045,8 @@
   const TX_KEY = 'checkin-passbook-transactions';
   const GOAL_KEY = 'checkin-passbook-goal';
   const CAP_KEY = 'checkin-passbook-caps';
+  const REWARDS_KEY = 'checkin-passbook-rewards';
+  const MONTHLY_STATS_KEY = 'checkin-passbook-monthly-miss-stats';
 
   let items = [];
   let transactions = [];
@@ -895,6 +1057,10 @@
   let goalAmount = 0;
   let dailyCap = 0;
   let weeklyCap = 0;
+  let rewards = [];
+  let editingRewardId = null;
+  let currentRewardImage = '';
+  let monthlyMissStats = {};
 
   const ICON_ROTATION = ['💧','📘','💪','✨','🎯','🌙','🍀','🎨'];
   const COLOR_ROTATION = ['#A6C2F2','#C9A6F2','#F2C49A','#F2A6C6','#A6E0CB','#F2E2A6','#A6D8F2','#E3B6F2'];
@@ -961,11 +1127,11 @@
     return d.innerHTML;
   }
 
-  function pushTransaction(item, date, type, amount, note){
+  function pushTransaction(item, date, type, amount, note, nominalAmount){
     transactions.push({
       id: txid(), date, ts: Date.now() + (txCounter++),
       itemId: item.id, itemName: item.name, icon: item.icon, color: item.color,
-      type, amount, note
+      type, amount, note, nominalAmount
     });
   }
 
@@ -985,8 +1151,10 @@
     // convert legacy string-array missed -> object array
     if(it.missed.length && typeof it.missed[0] === 'string'){
       const rate = Number(it.penaltyPerMiss) || 0;
-      it.missed = it.missed.map(d => ({ date: d, penaltyAmount: rate, refunded: false }));
+      it.missed = it.missed.map(d => ({ date: d, penaltyAmount: rate, nominalAmount: rate, refunded: false }));
     }
+    // backfill nominalAmount for older records that predate the field
+    it.missed.forEach(m => { if(m.nominalAmount === undefined) m.nominalAmount = m.penaltyAmount; });
     if(it.cycleProgress === undefined){
       const ms = Number(it.milestoneCount) || 0;
       it.cycleProgress = ms > 0 ? ((it.checkins || []).length % ms) : 0;
@@ -1010,9 +1178,6 @@
       const txRes = await storageGet(TX_KEY);
       transactions = (txRes && txRes.value) ? JSON.parse(txRes.value) : [];
     } catch(e){ transactions = []; }
-    // one-time cleanup: earlier versions logged $0 entries (e.g. a checkin worth
-    // $0, or a cap-blocked penalty) which are just noise now that those are skipped.
-    transactions = transactions.filter(t => t.amount !== 0 || t.type === 'opening_balance');
 
     try{
       const res = await storageGet(STORAGE_KEY);
@@ -1023,10 +1188,17 @@
     items.forEach((it, idx) => migrateItem(it, eff, idx));
 
     await loadCaps();
-    const changed = settleAll(eff);
+
+    try{
+      const msRes = await storageGet(MONTHLY_STATS_KEY);
+      monthlyMissStats = (msRes && msRes.value) ? JSON.parse(msRes.value) : {};
+    } catch(e){ monthlyMissStats = {}; }
+
+    settleAll(eff);
 
     await saveData();
     await saveTransactions();
+    await storageSet(MONTHLY_STATS_KEY, JSON.stringify(monthlyMissStats));
 
     const calRes = await storageGet(CAL_KEY);
     if(calRes && calRes.value){
@@ -1038,6 +1210,7 @@
 
     await loadGoal();
     await loadNote();
+    await loadRewards();
 
     render();
     renderCalendar();
@@ -1052,9 +1225,21 @@
     return addDaysStr(dateStr, -offset);
   }
 
+  function bumpMonthlyStat(item, dateStr){
+    const ym = dateStr.slice(0,7);
+    if(!monthlyMissStats[ym]) monthlyMissStats[ym] = {};
+    const cur = monthlyMissStats[ym][item.id];
+    monthlyMissStats[ym][item.id] = {
+      name: item.name, icon: item.icon, color: item.color,
+      count: (cur ? cur.count : 0) + 1
+    };
+  }
+
   // Global settlement: walks every unsettled day across all items in
   // chronological order so the daily/weekly deduction caps can be applied
-  // across items, not just per item.
+  // across items, not just per item. Every missed day is recorded (and a
+  // transaction logged) even when the cap reduces the actual deduction to
+  // zero, so nothing that "should" have been deducted goes unrecorded.
   function settleAll(effectiveToday){
     if(items.length === 0) return false;
 
@@ -1093,10 +1278,20 @@
         actual = Math.max(0, actual);
         const capped = actual < nominal;
 
-        item.missed.push({ date: cursor, penaltyAmount: actual, refunded: false });
-        if(actual > 0){
+        item.missed.push({ date: cursor, penaltyAmount: actual, nominalAmount: nominal, refunded: false });
+        bumpMonthlyStat(item, cursor);
+
+        if(nominal > 0){
           item.earnedTotal -= actual;
-          pushTransaction(item, cursor, 'penalty', -actual, capped ? '未簽到扣款（已達扣款上限）' : '未簽到扣款');
+          let note;
+          if(actual <= 0){
+            note = `未簽到，本應扣 ${fmtMoney(nominal).replace('-','')}，因已達扣款上限故未扣款`;
+          } else if(capped){
+            note = `未簽到扣款（本應扣 ${fmtMoney(nominal).replace('-','')}，因上限僅扣 ${fmtMoney(actual).replace('-','')}）`;
+          } else {
+            note = '未簽到扣款';
+          }
+          pushTransaction(item, cursor, 'penalty', -actual, note, nominal);
         }
         dayTotal += actual;
         weeklyTotals[ws] += actual;
@@ -1142,6 +1337,14 @@
     }
   }
   async function saveCaps(){ await storageSet(CAP_KEY, JSON.stringify({ dailyCap, weeklyCap })); }
+
+  async function loadRewards(){
+    try{
+      const r = await storageGet(REWARDS_KEY);
+      rewards = (r && r.value) ? JSON.parse(r.value) : [];
+    } catch(e){ rewards = []; }
+  }
+  async function saveRewards(){ return await storageSet(REWARDS_KEY, JSON.stringify(rewards)); }
 
   function buildGrid(item, effectiveToday, doneToday){
     const ms = Number(item.milestoneCount) || 0;
@@ -1370,11 +1573,13 @@
   }
 
   // ---------- Calendar ----------
-  let calYear, calMonth;
+  let calYear, calMonth, statMonthYear, statMonthMonth;
   (function initCalDate(){
     const now = new Date();
     calYear = now.getFullYear();
     calMonth = now.getMonth();
+    statMonthYear = now.getFullYear();
+    statMonthMonth = now.getMonth();
   })();
 
   function renderCalendar(){
@@ -1385,6 +1590,8 @@
     if(items.length === 0){
       body.innerHTML = '<div class="cal-empty-note">尚無簽到項目，新增項目後即可在月曆看到紀錄</div>';
       renderCalFilterList();
+      renderWeeklyStats();
+      renderMonthlyStats();
       return;
     }
 
@@ -1427,6 +1634,8 @@
     });
 
     renderCalFilterList();
+    renderWeeklyStats();
+    renderMonthlyStats();
   }
 
   function renderCalFilterList(){
@@ -1490,7 +1699,80 @@
     renderCalendar();
   });
 
-  // ---------- Day detail modal ----------
+  // ---------- Weekly / Monthly miss stats ----------
+  function statRowHtml(it, count){
+    return `<div class="stat-item-row">
+        <span class="cal-swatch" style="background:${it.color}">${escapeHtml(it.icon)}</span>
+        <span class="stat-item-name">${escapeHtml(it.name)}</span>
+        <span class="stat-item-count">${count} 次</span>
+      </div>`;
+  }
+
+  function renderWeeklyStats(){
+    const body = document.getElementById('weeklyStatsBody');
+    if(!body) return;
+    const eff = getEffectiveDateStr(new Date());
+    const curStart = getWeekStart(eff);
+    const curEnd = addDaysStr(curStart, 6);
+    const lastStart = addDaysStr(curStart, -7);
+    const lastEnd = addDaysStr(curEnd, -7);
+
+    let curRows = '', lastRows = '';
+    items.forEach(it => {
+      const c1 = it.missed.filter(m => m.date >= curStart && m.date <= curEnd).length;
+      const c2 = it.missed.filter(m => m.date >= lastStart && m.date <= lastEnd).length;
+      if(c1 > 0) curRows += statRowHtml(it, c1);
+      if(c2 > 0) lastRows += statRowHtml(it, c2);
+    });
+
+    body.innerHTML = `
+      <div class="stat-week-cols">
+        <div class="stat-col">
+          <div class="stat-col-title">本週（${formatShort(curStart)} ～ ${formatShort(curEnd)}）</div>
+          ${curRows || '<div class="stat-empty">這週目前全勤，繼續保持！</div>'}
+        </div>
+        <div class="stat-col">
+          <div class="stat-col-title">上週（${formatShort(lastStart)} ～ ${formatShort(lastEnd)}）</div>
+          ${lastRows || '<div class="stat-empty">上週沒有缺漏紀錄</div>'}
+        </div>
+      </div>
+    `;
+  }
+
+  function renderMonthlyStats(){
+    const titleEl = document.getElementById('statMonthTitle');
+    if(titleEl) titleEl.textContent = `${statMonthYear}年${statMonthMonth + 1}月`;
+    const body = document.getElementById('monthlyStatsBody');
+    if(!body) return;
+    const ym = `${statMonthYear}-${String(statMonthMonth + 1).padStart(2,'0')}`;
+    const data = monthlyMissStats[ym];
+    if(!data || Object.keys(data).length === 0){
+      body.innerHTML = '<div class="stat-empty">這個月沒有缺漏紀錄</div>';
+      return;
+    }
+    let html = '';
+    Object.values(data).sort((a,b) => b.count - a.count).forEach(d => {
+      html += `<div class="stat-item-row">
+          <span class="cal-swatch" style="background:${d.color}">${escapeHtml(d.icon)}</span>
+          <span class="stat-item-name">${escapeHtml(d.name)}</span>
+          <span class="stat-item-count">${d.count} 次</span>
+        </div>`;
+    });
+    body.innerHTML = html;
+  }
+
+  document.getElementById('statMonthPrev').addEventListener('click', () => {
+    statMonthMonth--;
+    if(statMonthMonth < 0){ statMonthMonth = 11; statMonthYear--; }
+    renderMonthlyStats();
+  });
+  document.getElementById('statMonthNext').addEventListener('click', () => {
+    statMonthMonth++;
+    if(statMonthMonth > 11){ statMonthMonth = 0; statMonthYear++; }
+    renderMonthlyStats();
+  });
+
+  // ---------- Day detail modal (check-in tab) ----------
   const dayModalOverlay = document.getElementById('dayModalOverlay');
   const dayModalTitle = document.getElementById('dayModalTitle');
   const dayModalList = document.getElementById('dayModalList');
@@ -1569,7 +1851,119 @@
     if(e.target === dayModalOverlay){ dayModalOverlay.classList.remove('open'); currentDayDate = null; }
   });
 
-  // ---------- Ledger (money log) ----------
+  // ---------- Rewards shelf ----------
+  function renderRewards(){
+    const wrap = document.getElementById('rewardsScroll');
+    if(!wrap) return;
+    const total = getGrandTotal();
+    let html = '';
+    rewards.forEach(r => {
+      const pct = r.amount > 0 ? Math.max(0, Math.min(100, (total / r.amount) * 100)) : 0;
+      const reached = r.amount > 0 && total >= r.amount;
+      html += `<div class="reward-card" data-reward="${r.id}">
+          ${r.image ? `<img class="reward-img" src="${r.image}" alt="${escapeHtml(r.name)}">` : `<div class="reward-img reward-img-empty">🎁</div>`}
+          <div class="reward-name">${escapeHtml(r.name)}</div>
+          <div class="reward-amount">${fmtMoney(r.amount)}</div>
+          <div class="reward-progress-track"><div class="reward-progress-fill" style="width:${pct}%"></div></div>
+          <div class="reward-progress-label">${reached ? '🎉 已達成！' : pct.toFixed(0) + '%'}</div>
+        </div>`;
+    });
+    html += `<div class="reward-card reward-add-card" id="rewardAddCard">＋<br>新增獎勵</div>`;
+    wrap.innerHTML = html;
+    wrap.querySelectorAll('[data-reward]').forEach(card => {
+      card.addEventListener('click', () => openRewardEdit(card.getAttribute('data-reward')));
+    });
+    const addCard = document.getElementById('rewardAddCard');
+    if(addCard) addCard.addEventListener('click', openRewardAdd);
+  }
+
+  const rewardModalOverlay = document.getElementById('rewardModalOverlay');
+  const fRewardImage = document.getElementById('fRewardImage');
+  const rewardImgPreviewWrap = document.getElementById('rewardImgPreviewWrap');
+  const rewardImgPreview = document.getElementById('rewardImgPreview');
+  const fRewardName = document.getElementById('fRewardName');
+  const fRewardAmount = document.getElementById('fRewardAmount');
+  const deleteRewardBtn = document.getElementById('deleteRewardBtn');
+
+  function openRewardAdd(){
+    editingRewardId = null;
+    document.getElementById('rewardModalTitle').textContent = '新增獎勵';
+    fRewardName.value = '';
+    fRewardAmount.value = '';
+    fRewardImage.value = '';
+    currentRewardImage = '';
+    rewardImgPreviewWrap.style.display = 'none';
+    deleteRewardBtn.style.display = 'none';
+    rewardModalOverlay.classList.add('open');
+  }
+  function openRewardEdit(id){
+    const r = rewards.find(x => x.id === id);
+    if(!r) return;
+    editingRewardId = id;
+    document.getElementById('rewardModalTitle').textContent = '編輯獎勵';
+    fRewardName.value = r.name;
+    fRewardAmount.value = r.amount;
+    fRewardImage.value = '';
+    currentRewardImage = r.image || '';
+    if(currentRewardImage){
+      rewardImgPreview.src = currentRewardImage;
+      rewardImgPreviewWrap.style.display = 'block';
+    } else {
+      rewardImgPreviewWrap.style.display = 'none';
+    }
+    deleteRewardBtn.style.display = 'inline-block';
+    rewardModalOverlay.classList.add('open');
+  }
+  fRewardImage.addEventListener('change', () => {
+    const file = fRewardImage.files && fRewardImage.files[0];
+    if(!file) return;
+    if(file.size > 4 * 1024 * 1024){
+      alert('這張照片太大了（超過 4MB），請換一張較小的照片');
+      fRewardImage.value = '';
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      currentRewardImage = reader.result;
+      rewardImgPreview.src = currentRewardImage;
+      rewardImgPreviewWrap.style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  });
+  document.getElementById('rewardCancelBtn').addEventListener('click', () => {
+    rewardModalOverlay.classList.remove('open');
+  });
+  document.getElementById('rewardSaveBtn').addEventListener('click', async () => {
+    const name = fRewardName.value.trim();
+    if(!name){ fRewardName.focus(); return; }
+    const amount = parseFloat(fRewardAmount.value) || 0;
+    const prevRewards = rewards;
+    if(editingRewardId){
+      const r = rewards.find(x => x.id === editingRewardId);
+      if(r){ r.name = name; r.amount = amount; r.image = currentRewardImage; }
+    } else {
+      rewards = rewards.concat([{ id: uid(), name, amount, image: currentRewardImage, createdAt: Date.now() }]);
+    }
+    const res = await saveRewards();
+    if(!res){
+      rewards = prevRewards;
+      alert('儲存失敗，可能是照片太大，請換一張較小的照片再試一次');
+      return;
+    }
+    rewardModalOverlay.classList.remove('open');
+    renderRewards();
+  });
+  deleteRewardBtn.addEventListener('click', async () => {
+    if(!editingRewardId) return;
+    rewards = rewards.filter(r => r.id !== editingRewardId);
+    await saveRewards();
+    rewardModalOverlay.classList.remove('open');
+    renderRewards();
+  });
+  rewardModalOverlay.addEventListener('click', (e) => { if(e.target === rewardModalOverlay) rewardModalOverlay.classList.remove('open'); });
+  document.getElementById('openRewardAddBtn').addEventListener('click', openRewardAdd);
+
+  // ---------- Ledger (money log, grouped by day) ----------
   function renderLedgerSummary(){
     const total = getGrandTotal();
     const summaryTotalEl = document.getElementById('summaryTotal');
@@ -1603,35 +1997,87 @@
     }
   }
 
+  function groupTransactionsByDay(){
+    const map = {};
+    transactions.forEach(t => {
+      if(!map[t.date]) map[t.date] = [];
+      map[t.date].push(t);
+    });
+    return map;
+  }
+
   function renderLedger(){
     renderLedgerSummary();
+    renderRewards();
     const body = document.getElementById('ledgerBody');
     if(transactions.length === 0){
       body.innerHTML = '<div class="empty-state">尚無金錢紀錄</div>';
       return;
     }
-    const sorted = transactions.slice().sort((a,b) => b.ts - a.ts);
+    const map = groupTransactionsByDay();
+    const dates = Object.keys(map).sort((a,b) => b.localeCompare(a));
     let html = '';
-    sorted.forEach(t => {
-      const cls = t.amount >= 0 ? 'amt-pos' : 'amt-neg';
-      const typeLabel = TYPE_LABELS[t.type] || t.type;
-      html += `<div class="ledger-row">
-          <div class="ledger-date">${formatShort(t.date)}</div>
-          <div class="ledger-item">
-            <span class="cal-swatch" style="background:${t.color}">${escapeHtml(t.icon)}</span>
-            <span class="nm">${escapeHtml(t.itemName)}</span>
-          </div>
-          <div class="ledger-type">${typeLabel}</div>
-          <div class="ledger-amt ${cls}">${fmtSigned(t.amount)}</div>
-          <button class="ledger-del-btn" data-del="${t.id}" title="刪除這筆紀錄">🗑</button>
+    dates.forEach(date => {
+      const dayTx = map[date];
+      let income = 0, expense = 0;
+      dayTx.forEach(t => { if(t.amount > 0) income += t.amount; else if(t.amount < 0) expense += t.amount; });
+      const net = income + expense;
+      const parts = date.split('-');
+      html += `<div class="ledger-day-row" data-day="${date}">
+          <div class="ledger-day-date">${formatShort(date)}<span class="ledger-day-year">${parts[0]}</span></div>
+          <div class="ledger-day-income">${income > 0 ? fmtSigned(income) : '—'}</div>
+          <div class="ledger-day-expense">${expense < 0 ? fmtSigned(expense) : '—'}</div>
+          <div class="ledger-day-net ${net < 0 ? 'amt-neg' : 'amt-pos'}">${fmtSigned(net)}</div>
+          <div class="ledger-day-arrow">›</div>
         </div>`;
     });
     body.innerHTML = html;
 
-    body.querySelectorAll('[data-del]').forEach(btn => {
+    body.querySelectorAll('[data-day]').forEach(row => {
+      row.addEventListener('click', () => openLedgerDayModal(row.getAttribute('data-day'), map[row.getAttribute('data-day')]));
+    });
+  }
+
+  const ledgerDayModalOverlay = document.getElementById('ledgerDayModalOverlay');
+  function openLedgerDayModal(date, dayTx){
+    const parts = date.split('-');
+    document.getElementById('ledgerDayModalTitle').textContent = `${parts[0]}/${parseInt(parts[1])}/${parseInt(parts[2])}`;
+    const list = document.getElementById('ledgerDayModalList');
+    list.innerHTML = '';
+    const sorted = dayTx.slice().sort((a,b) => b.ts - a.ts);
+    sorted.forEach(t => {
+      const cls = t.amount > 0 ? 'amt-pos' : (t.amount < 0 ? 'amt-neg' : '');
+      const typeLabel = TYPE_LABELS[t.type] || t.type;
+      let extra = '';
+      if(t.type === 'penalty' && t.nominalAmount !== undefined && t.nominalAmount > Math.abs(t.amount)){
+        extra = t.amount === 0
+          ? `<div class="day-modal-status" style="color:var(--penalty);">本應扣 ${fmtMoney(t.nominalAmount).replace('-','')}，因已達扣款上限未實際扣款</div>`
+          : `<div class="day-modal-status" style="color:var(--penalty);">本應扣 ${fmtMoney(t.nominalAmount).replace('-','')}，因上限僅扣 ${fmtMoney(Math.abs(t.amount)).replace('-','')}</div>`;
+      }
+      const row = document.createElement('div');
+      row.className = 'day-modal-row';
+      row.innerHTML = `
+        <div class="day-modal-info">
+          <span class="name-swatch" style="background:${t.color}">${escapeHtml(t.icon)}</span>
+          <div class="day-modal-text">
+            <div class="day-modal-name">${escapeHtml(t.itemName)} <span style="font-weight:400;color:var(--ink-soft);font-size:11px;">・${typeLabel}</span></div>
+            ${t.note ? `<div class="day-modal-status">${escapeHtml(t.note)}</div>` : ''}
+            ${extra}
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div class="ledger-amt ${cls}" style="font-size:14px;">${fmtSigned(t.amount)}</div>
+          <button class="ledger-del-btn" data-del="${t.id}" title="刪除這筆紀錄">🗑</button>
+        </div>
+      `;
+      list.appendChild(row);
+    });
+
+    list.querySelectorAll('[data-del]').forEach(btn => {
       btn.addEventListener('click', () => {
         if(btn.classList.contains('armed')){
           deleteTransaction(btn.getAttribute('data-del'));
+          ledgerDayModalOverlay.classList.remove('open');
         } else {
           btn.classList.add('armed');
           btn.textContent = '確定？';
@@ -1642,7 +2088,15 @@
         }
       });
     });
+
+    ledgerDayModalOverlay.classList.add('open');
   }
+  document.getElementById('ledgerDayModalClose').addEventListener('click', () => {
+    ledgerDayModalOverlay.classList.remove('open');
+  });
+  ledgerDayModalOverlay.addEventListener('click', (e) => {
+    if(e.target === ledgerDayModalOverlay) ledgerDayModalOverlay.classList.remove('open');
+  });
 
   async function deleteTransaction(txId){
     const idx = transactions.findIndex(t => t.id === txId);
