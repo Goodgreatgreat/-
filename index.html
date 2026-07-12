@@ -283,6 +283,7 @@
     color:var(--money);
   }
   .money-sub{font-size:10.5px; color:var(--penalty); margin-top:2px;}
+  .money-sub-income{font-size:10.5px; color:var(--ink-soft); margin-top:2px;}
 
   .item-bottom{margin-top:14px; display:flex; justify-content:flex-end;}
   .checkin-btn{
@@ -849,11 +850,21 @@
       </div>
       <button class="add-btn" id="clearLedgerBtn" style="background:var(--ink-soft);">清空紀錄列表</button>
     </div>
-    <div class="ledger-summary">
+    <div class="ledger-summary" style="margin-bottom:10px;">
       <div class="summary-block">
-        <div class="summary-label">目前總額</div>
+        <div class="summary-label">累積簽到收入</div>
+        <div class="summary-value" id="summaryIncome" style="color:var(--money);">$0</div>
+      </div>
+      <div class="summary-block">
+        <div class="summary-label">累積扣款</div>
+        <div class="summary-value" id="summaryPenaltyAll" style="color:var(--penalty);">$0</div>
+      </div>
+      <div class="summary-block">
+        <div class="summary-label">= 目前總額</div>
         <div class="summary-value" id="summaryTotal">$0</div>
       </div>
+    </div>
+    <div class="ledger-summary">
       <div class="summary-block">
         <div class="summary-label">目標金額 <button class="edit-goal-btn" id="editGoalBtn">✎ 設定</button></div>
         <div class="summary-value goal" id="summaryGoal">尚未設定</div>
@@ -1137,9 +1148,9 @@
 
   function defaultItems(eff){
     return [
-      { id: uid(), name: '每日喝水提醒', icon:'💧', color:'#A6C2F2', perCheckin: 5, milestoneCount: 7, milestoneBonus: 20, penaltyPerMiss: 2, checkins: [], makeup: [], missed: [], cycleProgress:0, earnedTotal:0, lastSettledDate: eff },
-      { id: uid(), name: '閱讀 30 分鐘', icon:'📘', color:'#C9A6F2', perCheckin: 10, milestoneCount: 7, milestoneBonus: 50, penaltyPerMiss: 0, checkins: [], makeup: [], missed: [], cycleProgress:0, earnedTotal:0, lastSettledDate: eff },
-      { id: uid(), name: '運動健身', icon:'💪', color:'#F2C49A', perCheckin: 15, milestoneCount: 30, milestoneBonus: 200, penaltyPerMiss: 5, checkins: [], makeup: [], missed: [], cycleProgress:0, earnedTotal:0, lastSettledDate: eff }
+      { id: uid(), name: '每日喝水提醒', icon:'💧', color:'#A6C2F2', perCheckin: 5, milestoneCount: 7, milestoneBonus: 20, penaltyPerMiss: 2, checkins: [], makeup: [], missed: [], cycleProgress:0, incomeTotal:0, penaltyTotal:0, lastSettledDate: eff },
+      { id: uid(), name: '閱讀 30 分鐘', icon:'📘', color:'#C9A6F2', perCheckin: 10, milestoneCount: 7, milestoneBonus: 50, penaltyPerMiss: 0, checkins: [], makeup: [], missed: [], cycleProgress:0, incomeTotal:0, penaltyTotal:0, lastSettledDate: eff },
+      { id: uid(), name: '運動健身', icon:'💪', color:'#F2C49A', perCheckin: 15, milestoneCount: 30, milestoneBonus: 200, penaltyPerMiss: 5, checkins: [], makeup: [], missed: [], cycleProgress:0, incomeTotal:0, penaltyTotal:0, lastSettledDate: eff }
     ];
   }
 
@@ -1159,14 +1170,25 @@
       const ms = Number(it.milestoneCount) || 0;
       it.cycleProgress = ms > 0 ? ((it.checkins || []).length % ms) : 0;
     }
-    if(it.earnedTotal === undefined){
-      const count = (it.checkins || []).length;
-      const base = count * (Number(it.perCheckin) || 0);
-      const ms = Number(it.milestoneCount) || 0;
-      const bonus = ms > 0 ? Math.floor(count / ms) * (Number(it.milestoneBonus) || 0) : 0;
-      const penaltyTotal = (it.missed || []).reduce((s,m) => s + (m.penaltyAmount || 0), 0);
-      it.earnedTotal = base + bonus - penaltyTotal;
-      pushTransaction(it, eff, 'opening_balance', it.earnedTotal, '既有累積金額轉入');
+    // Income (check-ins + milestone bonuses) and penalties (missed days) are tracked as two
+    // separate running totals — money-earned never merges with money-deducted internally.
+    // The visible total for an item is simply incomeTotal - penaltyTotal.
+    const activePenaltySum = (it.missed || []).filter(m => !m.refunded).reduce((s,m) => s + (m.penaltyAmount || 0), 0);
+    if(it.incomeTotal === undefined || it.penaltyTotal === undefined){
+      if(it.earnedTotal !== undefined){
+        // migrating from the old merged single-number model
+        it.penaltyTotal = activePenaltySum;
+        it.incomeTotal = it.earnedTotal + activePenaltySum;
+        delete it.earnedTotal;
+      } else {
+        const count = (it.checkins || []).length;
+        const base = count * (Number(it.perCheckin) || 0);
+        const ms = Number(it.milestoneCount) || 0;
+        const bonus = ms > 0 ? Math.floor(count / ms) * (Number(it.milestoneBonus) || 0) : 0;
+        it.incomeTotal = base + bonus;
+        it.penaltyTotal = activePenaltySum;
+        pushTransaction(it, eff, 'opening_balance', it.incomeTotal, '既有累積金額轉入');
+      }
     }
     if(!it.lastSettledDate) it.lastSettledDate = eff;
   }
@@ -1282,7 +1304,7 @@
         bumpMonthlyStat(item, cursor);
 
         if(nominal > 0){
-          item.earnedTotal -= actual;
+          item.penaltyTotal = (Number(item.penaltyTotal) || 0) + actual;
           let note;
           if(actual <= 0){
             note = `未簽到，本應扣 ${fmtMoney(nominal).replace('-','')}，因已達扣款上限故未扣款`;
@@ -1316,7 +1338,7 @@
   async function saveAll(){ await saveData(); await saveTransactions(); }
 
   function getGrandTotal(){
-    return items.reduce((s, it) => s + (Number(it.earnedTotal) || 0), 0);
+    return items.reduce((s, it) => s + ((Number(it.incomeTotal) || 0) - (Number(it.penaltyTotal) || 0)), 0);
   }
   async function loadGoal(){
     const r = await storageGet(GOAL_KEY);
@@ -1382,13 +1404,14 @@
     let grandTotal = 0, totalCheckinsAll = 0, todayDone = 0, grandPenalty = 0;
 
     items.forEach(item => {
-      const total = Number(item.earnedTotal) || 0;
+      const income = Number(item.incomeTotal) || 0;
+      const penaltyTotal = Number(item.penaltyTotal) || 0;
+      const total = income - penaltyTotal;
       const count = item.checkins.length;
       grandTotal += total;
       totalCheckinsAll += count;
-      const activeMissed = item.missed.filter(m => !m.refunded && m.penaltyAmount > 0);
-      const missedAmt = activeMissed.reduce((s,m) => s + m.penaltyAmount, 0);
-      grandPenalty += missedAmt;
+      const activeMissedCount = item.missed.filter(m => !m.refunded && m.penaltyAmount > 0).length;
+      grandPenalty += penaltyTotal;
       const doneToday = item.checkins.includes(effectiveToday);
       if(doneToday) todayDone++;
 
@@ -1433,7 +1456,8 @@
           <div class="money-block">
             <div class="money-label">累積 ${count} 次</div>
             <div class="money-value" style="${total < 0 ? 'color:var(--penalty);' : ''}">${fmtMoney(total)}</div>
-            ${activeMissed.length > 0 ? `<div class="money-sub">目前扣款 ${activeMissed.length} 次 (-${fmtMoney(missedAmt).replace('-','').replace('$','')})</div>` : ''}
+            <div class="money-sub-income">簽到收入 +${fmtMoney(income).replace('$','')}</div>
+            ${penaltyTotal > 0 ? `<div class="money-sub">扣款累計 -${fmtMoney(penaltyTotal).replace('-','').replace('$','')}${activeMissedCount > 0 ? `（${activeMissedCount} 次）` : ''}</div>` : ''}
           </div>
         </div>
         <div class="item-bottom">
@@ -1476,7 +1500,7 @@
     if(item.checkins.includes(eff)) return;
 
     const amt = Number(item.perCheckin) || 0;
-    item.earnedTotal = (Number(item.earnedTotal) || 0) + amt;
+    item.incomeTotal = (Number(item.incomeTotal) || 0) + amt;
     item.checkins.push(eff);
     if(amt > 0){
       pushTransaction(item, eff, 'checkin', amt, '當日簽到');
@@ -1489,7 +1513,7 @@
       const bonus = Number(item.milestoneBonus) || 0;
       item.cycleProgress = 0;
       if(bonus > 0){
-        item.earnedTotal += bonus;
+        item.incomeTotal = (Number(item.incomeTotal) || 0) + bonus;
         const cycleDates = item.checkins.slice(Math.max(0, item.checkins.length - ms));
         const rangeNote = cycleDates.length > 1
           ? `${formatShort(cycleDates[0])}～${formatShort(cycleDates[cycleDates.length - 1])} 完成 ${ms} 次`
@@ -1519,7 +1543,7 @@
     let sum = 0, hadMilestone = false;
     related.forEach(t => { sum += t.amount; if(t.type === 'milestone') hadMilestone = true; });
 
-    item.earnedTotal = (Number(item.earnedTotal) || 0) - sum;
+    item.incomeTotal = (Number(item.incomeTotal) || 0) - sum;
     transactions = transactions.filter(t => !(t.itemId === id && t.date === date && (t.type === 'checkin' || t.type === 'milestone')));
     item.checkins = item.checkins.filter(d => d !== date);
 
@@ -1542,7 +1566,7 @@
     const m = item.missed.find(x => x.date === date && !x.refunded);
     if(m){
       if(m.penaltyAmount > 0){
-        item.earnedTotal = (Number(item.earnedTotal) || 0) + m.penaltyAmount;
+        item.penaltyTotal = (Number(item.penaltyTotal) || 0) - m.penaltyAmount;
         pushTransaction(item, date, 'refund_penalty', m.penaltyAmount, '補簽退款');
       }
       m.refunded = true;
@@ -1561,7 +1585,7 @@
     const m = item.missed.find(x => x.date === date);
     if(m && m.refunded){
       if(m.penaltyAmount > 0){
-        item.earnedTotal = (Number(item.earnedTotal) || 0) - m.penaltyAmount;
+        item.penaltyTotal = (Number(item.penaltyTotal) || 0) + m.penaltyAmount;
         pushTransaction(item, date, 'penalty', -m.penaltyAmount, '取消補簽，恢復扣款');
       }
       m.refunded = false;
@@ -1966,6 +1990,11 @@
   // ---------- Ledger (money log, grouped by day) ----------
   function renderLedgerSummary(){
     const total = getGrandTotal();
+    const totalIncome = items.reduce((s, it) => s + (Number(it.incomeTotal) || 0), 0);
+    const totalPenalty = items.reduce((s, it) => s + (Number(it.penaltyTotal) || 0), 0);
+    document.getElementById('summaryIncome').textContent = fmtMoney(totalIncome);
+    document.getElementById('summaryPenaltyAll').textContent = totalPenalty > 0 ? fmtMoney(-totalPenalty) : '$0';
+
     const summaryTotalEl = document.getElementById('summaryTotal');
     summaryTotalEl.textContent = fmtMoney(total);
     summaryTotalEl.style.color = total < 0 ? 'var(--penalty)' : '';
@@ -2104,7 +2133,14 @@
     const tx = transactions[idx];
     if(tx.amount){
       const item = items.find(i => i.id === tx.itemId);
-      if(item) item.earnedTotal = (Number(item.earnedTotal) || 0) - tx.amount;
+      if(item){
+        if(tx.type === 'penalty' || tx.type === 'refund_penalty'){
+          // both types were originally applied against penaltyTotal only
+          item.penaltyTotal = (Number(item.penaltyTotal) || 0) + tx.amount;
+        } else {
+          item.incomeTotal = (Number(item.incomeTotal) || 0) - tx.amount;
+        }
+      }
     }
     transactions.splice(idx, 1);
     await saveAll();
@@ -2320,7 +2356,7 @@
     const penalty = fPenalty.value ? parseFloat(fPenalty.value) : 0;
 
     if(editingId){
-      // editing only changes future-facing rules; earnedTotal / history untouched
+      // editing only changes future-facing rules; incomeTotal/penaltyTotal / history untouched
       const item = items.find(i => i.id === editingId);
       if(item){
         item.name = name;
@@ -2336,7 +2372,7 @@
       const newItem = {
         id: uid(), name, icon, color, perCheckin: per,
         milestoneCount: mCount, milestoneBonus: mBonus, penaltyPerMiss: penalty,
-        checkins: [], makeup: [], missed: [], cycleProgress: 0, earnedTotal: 0,
+        checkins: [], makeup: [], missed: [], cycleProgress: 0, incomeTotal: 0, penaltyTotal: 0,
         lastSettledDate: eff
       };
       items.push(newItem);
