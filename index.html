@@ -956,6 +956,19 @@
   </div>
 </div>
 
+<!-- Settlement summary modal (shown when the app has processed missed days since last visit) -->
+<div class="modal-overlay" id="settlementModalOverlay">
+  <div class="modal wide">
+    <h3>📋 未簽到摘要</h3>
+    <div class="field-hint" style="margin-top:-8px;">這是距離上次開啟後，系統自動結算出的未簽到項目與扣款金額。</div>
+    <div id="settlementModalList"></div>
+    <div class="modal-actions">
+      <div></div>
+      <button class="btn btn-primary" id="settlementModalClose">我知道了</button>
+    </div>
+  </div>
+</div>
+
 <!-- Subtitle note edit modal -->
 <div class="modal-overlay" id="noteModalOverlay">
   <div class="modal">
@@ -1216,7 +1229,7 @@
       monthlyMissStats = (msRes && msRes.value) ? JSON.parse(msRes.value) : {};
     } catch(e){ monthlyMissStats = {}; }
 
-    settleAll(eff);
+    const settlement = settleAll(eff);
 
     await saveData();
     await saveTransactions();
@@ -1237,6 +1250,10 @@
     render();
     renderCalendar();
     renderLedger();
+
+    if(settlement.events && settlement.events.length > 0){
+      showSettlementSummary(settlement.events);
+    }
   }
 
   function getWeekStart(dateStr){
@@ -1262,8 +1279,11 @@
   // across items, not just per item. Every missed day is recorded (and a
   // transaction logged) even when the cap reduces the actual deduction to
   // zero, so nothing that "should" have been deducted goes unrecorded.
+  // Also collects a per-date summary of exactly which items were missed and
+  // how much was actually deducted that day, so the UI can show a clear
+  // "today's missed items + today's total deduction" summary.
   function settleAll(effectiveToday){
-    if(items.length === 0) return false;
+    if(items.length === 0) return { changed:false, events:[] };
 
     let minDate = items[0].lastSettledDate;
     items.forEach(it => { if(it.lastSettledDate < minDate) minDate = it.lastSettledDate; });
@@ -1272,6 +1292,7 @@
     let cursor = addDaysStr(minDate, 1);
     let guard = 0;
     const weeklyTotals = {};
+    const eventsByDate = {};
 
     function ensureWeekSeeded(ws){
       if(weeklyTotals[ws] !== undefined) return;
@@ -1303,6 +1324,9 @@
         item.missed.push({ date: cursor, penaltyAmount: actual, nominalAmount: nominal, refunded: false });
         bumpMonthlyStat(item, cursor);
 
+        if(!eventsByDate[cursor]) eventsByDate[cursor] = { date: cursor, misses: [], total: 0 };
+        eventsByDate[cursor].misses.push({ name: item.name, icon: item.icon, color: item.color, actual, nominal, capped });
+
         if(nominal > 0){
           item.penaltyTotal = (Number(item.penaltyTotal) || 0) + actual;
           let note;
@@ -1314,6 +1338,7 @@
             note = '未簽到扣款';
           }
           pushTransaction(item, cursor, 'penalty', -actual, note, nominal);
+          eventsByDate[cursor].total += actual;
         }
         dayTotal += actual;
         weeklyTotals[ws] += actual;
@@ -1329,7 +1354,8 @@
       if(it.lastSettledDate < target){ it.lastSettledDate = target; changed = true; }
     });
 
-    return changed;
+    const events = Object.keys(eventsByDate).sort().map(d => eventsByDate[d]);
+    return { changed, events };
   }
 
   async function saveData(){ await storageSet(STORAGE_KEY, JSON.stringify(items)); }
@@ -1829,9 +1855,25 @@
     dayModalTitle.textContent = `${parts[0]}/${parseInt(parts[1])}/${parseInt(parts[2])}`;
     const effectiveToday = getEffectiveDateStr(new Date());
 
+    // Summary line: how many items were missed this specific day, and the
+    // total amount actually deducted for this day (across all items).
+    let missedCount = 0, missedTotal = 0;
+    items.forEach(item => {
+      const m = item.missed.find(x => x.date === dateStr && !x.refunded);
+      if(m){ missedCount++; missedTotal += (m.penaltyAmount || 0); }
+    });
+
     dayModalList.innerHTML = '';
+    if(missedCount > 0){
+      const summaryEl = document.createElement('div');
+      summaryEl.style.cssText = 'background:#FFF1F5;border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:10px;font-size:12.5px;';
+      summaryEl.innerHTML = `<strong style="color:var(--penalty);">本日共 ${missedCount} 項未簽到</strong>，本日合計扣款
+        <strong style="color:var(--penalty);font-family:'JetBrains Mono',monospace;">-${fmtMoney(missedTotal).replace('-','').replace('$','$')}</strong>`;
+      dayModalList.appendChild(summaryEl);
+    }
+
     if(items.length === 0){
-      dayModalList.innerHTML = '<div class="empty-state">尚無項目</div>';
+      dayModalList.innerHTML += '<div class="empty-state">尚無項目</div>';
     }
     items.forEach(item => {
       const st = dayStatus(item, dateStr, effectiveToday);
@@ -1873,6 +1915,54 @@
   });
   dayModalOverlay.addEventListener('click', (e) => {
     if(e.target === dayModalOverlay){ dayModalOverlay.classList.remove('open'); currentDayDate = null; }
+  });
+
+  // ---------- Settlement summary modal (missed items + deduction total, per day) ----------
+  const settlementModalOverlay = document.getElementById('settlementModalOverlay');
+  function showSettlementSummary(events){
+    const listEl = document.getElementById('settlementModalList');
+    let html = '';
+    events.forEach(ev => {
+      const parts = ev.date.split('-');
+      const dateLabel = `${parts[0]}/${parseInt(parts[1])}/${parseInt(parts[2])}`;
+      let rows = '';
+      ev.misses.forEach(m => {
+        let amtText;
+        if(m.nominal <= 0){
+          amtText = '（此項目未設定扣款金額）';
+        } else if(m.actual <= 0){
+          amtText = `本應扣 ${fmtMoney(m.nominal).replace('-','')}，因已達扣款上限故未扣款`;
+        } else if(m.capped){
+          amtText = `扣款 ${fmtMoney(m.actual).replace('-','')}（原應扣 ${fmtMoney(m.nominal).replace('-','')}，因上限調整）`;
+        } else {
+          amtText = `扣款 ${fmtMoney(m.actual).replace('-','')}`;
+        }
+        rows += `<div class="day-modal-row">
+            <div class="day-modal-info">
+              <span class="name-swatch" style="background:${m.color}">${escapeHtml(m.icon)}</span>
+              <div class="day-modal-text">
+                <div class="day-modal-name">${escapeHtml(m.name)}</div>
+                <div class="day-modal-status">未簽到・${amtText}</div>
+              </div>
+            </div>
+          </div>`;
+      });
+      html += `<div style="margin-bottom:16px;">
+          <div style="font-weight:700;font-family:'Noto Serif TC',serif;margin-bottom:8px;display:flex;justify-content:space-between;align-items:baseline;gap:10px;">
+            <span>${dateLabel}</span>
+            <span style="font-family:'JetBrains Mono',monospace;color:var(--penalty);font-size:14px;white-space:nowrap;">本日合計 -${fmtMoney(ev.total).replace('-','').replace('$','$')}</span>
+          </div>
+          <div class="day-modal-list">${rows}</div>
+        </div>`;
+    });
+    listEl.innerHTML = html;
+    settlementModalOverlay.classList.add('open');
+  }
+  document.getElementById('settlementModalClose').addEventListener('click', () => {
+    settlementModalOverlay.classList.remove('open');
+  });
+  settlementModalOverlay.addEventListener('click', (e) => {
+    if(e.target === settlementModalOverlay) settlementModalOverlay.classList.remove('open');
   });
 
   // ---------- Rewards shelf ----------
