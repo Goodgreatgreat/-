@@ -862,6 +862,27 @@
     cursor:ns-resize;
     touch-action:none;
   }
+  .planner-now-line{
+    position:absolute;
+    left:68px;
+    right:0;
+    height:2px;
+    background:#D93468;
+    z-index:4;
+    pointer-events:none;
+    box-shadow:0 0 0 1px rgba(255,255,255,.85);
+  }
+  .planner-now-line::before{
+    content:"";
+    position:absolute;
+    left:-5px;
+    top:-4px;
+    width:10px;
+    height:10px;
+    border-radius:50%;
+    background:#D93468;
+  }
+  .planner-mobile-toggle{display:none;}
   .planner-empty{padding:18px;text-align:center;color:var(--ink-soft);font-size:12px;}
   .misc-list{display:flex;flex-direction:column;gap:8px;margin-bottom:16px;}
   .misc-row{display:flex;align-items:center;gap:9px;border:1px solid var(--line);border-radius:10px;padding:8px 10px;}
@@ -886,6 +907,39 @@
     .planner-range{gap:6px;}
     .planner-time-label{width:58px;font-size:9.5px;}
     .planner-block{left:64px;}
+    .planner-now-line{left:58px;}
+    .planner-mobile-toggle{
+      display:flex;
+      position:fixed;
+      right:14px;
+      bottom:16px;
+      z-index:120;
+      align-items:center;
+      justify-content:center;
+      min-width:116px;
+      height:44px;
+      padding:0 14px;
+      border:0;
+      border-radius:999px;
+      background:var(--primary);
+      color:#fff;
+      font-family:'Noto Sans TC',sans-serif;
+      font-size:13px;
+      font-weight:700;
+      box-shadow:0 10px 24px -8px rgba(122,39,72,.7);
+      cursor:pointer;
+    }
+    .planner-section:not(.mobile-editing) .planner-range,
+    .planner-section:not(.mobile-editing) .planner-tools,
+    .planner-section:not(.mobile-editing) .planner-palette-head,
+    .planner-section:not(.mobile-editing) .planner-palette,
+    .planner-section:not(.mobile-editing) .planner-hint{display:none;}
+    .planner-section:not(.mobile-editing) .planner-scroll{max-height:276px;}
+    .planner-section:not(.mobile-editing) .planner-card{padding-bottom:10px;}
+    .planner-section:not(.mobile-editing) .planner-block{cursor:default;padding-right:10px;}
+    .planner-section:not(.mobile-editing) .planner-block-delete,
+    .planner-section:not(.mobile-editing) .planner-resize-handle{display:none;}
+    .planner-section.mobile-editing .planner-scroll{max-height:70vh;}
   }
 </style>
 </head>
@@ -954,6 +1008,8 @@
       </div>
     </div>
   </section>
+
+  <button class="planner-mobile-toggle" id="plannerMobileToggle" aria-expanded="false" aria-controls="plannerTimeline">✎ 編輯時間表</button>
 
   <div class="tabs">
     <button class="tab-btn active" id="tabCheckinBtn">📅 簽到</button>
@@ -1327,6 +1383,8 @@
   let plannerSelectedBlockId = null;
   let editingPlannerMiscId = null;
   let plannerResizeState = null;
+  let plannerMobileEditing = false;
+  let plannerMobileNeedsFocus = true;
 
   const ICON_ROTATION = ['💧','📘','💪','✨','🎯','🌙','🍀','🎨'];
   const COLOR_ROTATION = ['#A6C2F2','#C9A6F2','#F2C49A','#F2A6C6','#A6E0CB','#F2E2A6','#A6D8F2','#E3B6F2'];
@@ -1944,6 +2002,7 @@
     }
     plannerDay = { date:effectiveToday, start:PLANNER_DEFAULT_START, end:PLANNER_DEFAULT_END, blocks:[] };
     plannerSelectedBlockId = null;
+    plannerMobileNeedsFocus = true;
     await savePlannerDay();
     return true;
   }
@@ -1979,6 +2038,38 @@
   function plannerDateText(dateStr){
     const [y,m,d] = dateStr.split('-').map(Number);
     return `${y}/${m}/${d}・凌晨 4 點重置`;
+  }
+
+  function plannerIsMobile(){
+    return typeof window.matchMedia === 'function' && window.matchMedia('(max-width:480px)').matches;
+  }
+
+  function plannerIsMobileCompact(){ return plannerIsMobile() && !plannerMobileEditing; }
+
+  function plannerCurrentMinute(){
+    const now = new Date();
+    let minute = now.getHours() * 60 + now.getMinutes();
+    if(minute < 240) minute += 1440;
+    return minute;
+  }
+
+  function focusPlannerAroundNow(){
+    if(!plannerDay || !plannerIsMobileCompact()) return;
+    const scroll = document.getElementById('plannerScroll');
+    if(!scroll) return;
+    const desiredStart = plannerCurrentMinute() - 90;
+    const desiredTop = ((desiredStart - plannerDay.start) / 30) * PLANNER_SLOT_PX;
+    const maxTop = Math.max(0, scroll.scrollHeight - scroll.clientHeight);
+    scroll.scrollTop = Math.max(0, Math.min(maxTop, desiredTop));
+  }
+
+  function syncPlannerMobileMode(){
+    const section = document.querySelector('.planner-section');
+    const toggle = document.getElementById('plannerMobileToggle');
+    if(!section || !toggle) return;
+    section.classList.toggle('mobile-editing', plannerIsMobile() && plannerMobileEditing);
+    toggle.textContent = plannerMobileEditing ? '⌄ 收起時間表' : '✎ 編輯時間表';
+    toggle.setAttribute('aria-expanded', plannerMobileEditing ? 'true' : 'false');
   }
 
   function plannerSelectOptions(select, from, to, selected){
@@ -2026,6 +2117,11 @@
         <div class="planner-time-label">${plannerTimeLabel(minute)}</div>
         <button class="planner-slot" data-planner-slot="${minute}" title="安排 ${plannerTimeLabel(minute)}"></button>
       </div>`;
+    }
+    const currentMinute = plannerCurrentMinute();
+    if(currentMinute >= plannerDay.start && currentMinute <= plannerDay.end){
+      const nowTop = ((currentMinute - plannerDay.start) / 30) * PLANNER_SLOT_PX;
+      html += `<div class="planner-now-line" style="top:${nowTop}px" title="現在時間"></div>`;
     }
     plannerDay.blocks.slice().sort((a,b) => a.start - b.start).forEach(block => {
       hydratePlannerBlock(block);
@@ -2077,9 +2173,17 @@
     } else {
       hint.textContent = '先點上方一個色塊，再點時間表中的空白時段即可加入。點兩個已排定色塊可交換內容。';
     }
+    syncPlannerMobileMode();
+    if(plannerMobileNeedsFocus && plannerIsMobileCompact()){
+      requestAnimationFrame(() => {
+        focusPlannerAroundNow();
+        plannerMobileNeedsFocus = false;
+      });
+    }
   }
 
   async function addPlannerBlock(start){
+    if(plannerIsMobileCompact()) return;
     if(!plannerSelectedSourceKey){
       document.getElementById('plannerHint').textContent = '請先從上方素材區選一個色塊。';
       return;
@@ -2099,6 +2203,7 @@
   }
 
   async function selectPlannerBlock(id){
+    if(plannerIsMobileCompact()) return;
     if(!plannerDay.blocks.some(b => b.id === id)) return;
     plannerSelectedSourceKey = null;
     if(!plannerSelectedBlockId){
@@ -2123,6 +2228,7 @@
   }
 
   async function deletePlannerBlock(id){
+    if(plannerIsMobileCompact()) return;
     plannerDay.blocks = plannerDay.blocks.filter(b => b.id !== id);
     if(plannerSelectedBlockId === id) plannerSelectedBlockId = null;
     await savePlannerDay();
@@ -2130,6 +2236,7 @@
   }
 
   function startPlannerResize(id, e){
+    if(plannerIsMobileCompact()) return;
     const block = plannerDay.blocks.find(b => b.id === id);
     if(!block) return;
     e.preventDefault();
@@ -2279,6 +2386,21 @@
   document.getElementById('plannerMiscCloseBtn').addEventListener('click', () => plannerMiscOverlay.classList.remove('open'));
   document.getElementById('plannerMiscSaveBtn').addEventListener('click', savePlannerMiscForm);
   plannerMiscOverlay.addEventListener('click', e => { if(e.target === plannerMiscOverlay) plannerMiscOverlay.classList.remove('open'); });
+
+  document.getElementById('plannerMobileToggle').addEventListener('click', () => {
+    if(!plannerIsMobile()) return;
+    plannerMobileEditing = !plannerMobileEditing;
+    plannerSelectedSourceKey = null;
+    plannerSelectedBlockId = null;
+    plannerMobileNeedsFocus = !plannerMobileEditing;
+    renderPlanner();
+    if(plannerMobileEditing){
+      requestAnimationFrame(() => document.querySelector('.planner-section').scrollIntoView({ behavior:'smooth', block:'start' }));
+    }
+  });
+  window.addEventListener('resize', () => {
+    syncPlannerMobileMode();
+  });
 
   document.addEventListener('visibilitychange', async () => {
     if(document.visibilityState === 'visible' && plannerReady && await ensurePlannerEffectiveDay()) renderPlanner();
