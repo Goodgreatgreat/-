@@ -805,11 +805,13 @@
   .planner-time-row{position:absolute;left:0;right:0;height:46px;display:flex;}
   .planner-time-label{
     width:68px;
-    padding:7px 8px 0 4px;
+    padding:0 8px 0 4px;
     text-align:right;
     color:var(--ink-soft);
     font-family:'JetBrains Mono',monospace;
     font-size:10.5px;
+    line-height:14px;
+    transform:translateY(-7px);
     flex-shrink:0;
   }
   .planner-slot{
@@ -881,6 +883,21 @@
     height:10px;
     border-radius:50%;
     background:#D93468;
+  }
+  .planner-now-line::after{
+    content:attr(data-time);
+    position:absolute;
+    right:calc(100% + 7px);
+    top:50%;
+    transform:translateY(-50%);
+    padding:2px 4px;
+    border-radius:5px;
+    background:#D93468;
+    color:#fff;
+    font-family:'JetBrains Mono',monospace;
+    font-size:9px;
+    line-height:1.2;
+    white-space:nowrap;
   }
   .planner-mobile-toggle{display:none;}
   .planner-empty{padding:18px;text-align:center;color:var(--ink-soft);font-size:12px;}
@@ -1359,6 +1376,7 @@
   const PLANNER_MISC_KEY = 'checkin-passbook-planner-misc-v1';
   const PLANNER_SLOT_MINUTES = 30;
   const PLANNER_SLOT_PX = 46;
+  const PLANNER_TOP_INSET = 12;
   const PLANNER_DEFAULT_START = 7 * 60;
   const PLANNER_DEFAULT_END = 26 * 60;
 
@@ -2058,7 +2076,7 @@
     const scroll = document.getElementById('plannerScroll');
     if(!scroll) return;
     const desiredStart = plannerCurrentMinute() - 90;
-    const desiredTop = ((desiredStart - plannerDay.start) / 30) * PLANNER_SLOT_PX;
+    const desiredTop = PLANNER_TOP_INSET + ((desiredStart - plannerDay.start) / 30) * PLANNER_SLOT_PX;
     const maxTop = Math.max(0, scroll.scrollHeight - scroll.clientHeight);
     scroll.scrollTop = Math.max(0, Math.min(maxTop, desiredTop));
   }
@@ -2109,23 +2127,23 @@
 
     const oldScrollTop = scroll.scrollTop;
     const slots = Math.max(1, (plannerDay.end - plannerDay.start) / 30);
-    timeline.style.height = (slots * PLANNER_SLOT_PX) + 'px';
+    timeline.style.height = (PLANNER_TOP_INSET * 2 + slots * PLANNER_SLOT_PX) + 'px';
     let html = '';
     for(let i = 0; i < slots; i++){
       const minute = plannerDay.start + i * 30;
-      html += `<div class="planner-time-row" style="top:${i * PLANNER_SLOT_PX}px">
+      html += `<div class="planner-time-row" style="top:${PLANNER_TOP_INSET + i * PLANNER_SLOT_PX}px">
         <div class="planner-time-label">${plannerTimeLabel(minute)}</div>
         <button class="planner-slot" data-planner-slot="${minute}" title="安排 ${plannerTimeLabel(minute)}"></button>
       </div>`;
     }
     const currentMinute = plannerCurrentMinute();
     if(currentMinute >= plannerDay.start && currentMinute <= plannerDay.end){
-      const nowTop = ((currentMinute - plannerDay.start) / 30) * PLANNER_SLOT_PX;
-      html += `<div class="planner-now-line" style="top:${nowTop}px" title="現在時間"></div>`;
+      const nowTop = PLANNER_TOP_INSET + ((currentMinute - plannerDay.start) / 30) * PLANNER_SLOT_PX;
+      html += `<div class="planner-now-line" style="top:${nowTop}px" data-time="${plannerTimeLabel(currentMinute)}" title="現在時間"></div>`;
     }
     plannerDay.blocks.slice().sort((a,b) => a.start - b.start).forEach(block => {
       hydratePlannerBlock(block);
-      const top = ((block.start - plannerDay.start) / 30) * PLANNER_SLOT_PX + 2;
+      const top = PLANNER_TOP_INSET + ((block.start - plannerDay.start) / 30) * PLANNER_SLOT_PX + 2;
       const height = Math.max(40, (block.duration / 30) * PLANNER_SLOT_PX - 4);
       html += `<div class="planner-block ${plannerSelectedBlockId === block.id ? 'selected' : ''}"
           data-planner-block="${block.id}" style="top:${top}px;height:${height}px;background:${block.color}">
