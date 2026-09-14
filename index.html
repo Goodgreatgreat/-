@@ -107,6 +107,18 @@
   }
   .stat-value.small{font-size:17px;}
   .stat-value.penalty-stat{color:#B5536F;}
+  .cover-goal{margin-top:16px;padding:12px;border:1px solid rgba(194,59,102,.16);border-radius:12px;background:rgba(255,255,255,.46);}
+  .cover-goal-top{display:flex;justify-content:space-between;gap:10px;align-items:center;font-size:12px;color:#7A3A58;}
+  .cover-goal-top strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .cover-goal-track{height:7px;border-radius:99px;background:rgba(194,59,102,.15);overflow:hidden;margin:8px 0 5px;}
+  .cover-goal-fill{height:100%;width:0;background:var(--primary);border-radius:99px;}
+  .cover-goal-bottom{font-size:11px;color:#9A7282;}
+  .cover-goal-link{margin-top:9px;border:0;background:rgba(255,255,255,.72);color:var(--primary-dark);border-radius:8px;padding:6px 9px;font:700 11px 'Noto Sans TC',sans-serif;cursor:pointer;}
+  .reminder-settings-btn{margin-top:10px;border:1px solid rgba(194,59,102,.2);background:rgba(255,255,255,.6);color:#7A3A58;border-radius:8px;padding:7px 10px;font:700 11px 'Noto Sans TC',sans-serif;cursor:pointer;}
+  .reminder-banner{display:none;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;padding:10px 12px;border-radius:10px;background:#fff;color:#7A3A58;font-size:12px;line-height:1.5;}
+  .reminder-banner.visible{display:flex;}
+  .reminder-banner button{flex-shrink:0;border:0;background:#FBE0E9;color:var(--primary-dark);border-radius:7px;padding:6px 8px;font:700 11px 'Noto Sans TC',sans-serif;cursor:pointer;}
+  .streak-note{font-size:11px;color:var(--primary-dark);margin-top:5px;}
 
   /* ---------- Tabs ---------- */
   .tabs{display:flex; gap:8px; margin:22px 0 4px;}
@@ -571,6 +583,13 @@
     width:0%;
   }
   .reward-progress-label{font-size:10.5px; color:var(--ink-soft); font-family:'JetBrains Mono',monospace;}
+  .reward-redeem-btn{width:100%;margin-top:9px;border:0;border-radius:8px;padding:7px;background:var(--primary);color:#fff;font:700 12px 'Noto Sans TC',sans-serif;cursor:pointer;}
+  .reward-redeem-btn:hover{background:var(--primary-dark);}
+  .reward-redeem-btn:disabled{opacity:.5;cursor:not-allowed;}
+  .reward-order{display:flex;gap:5px;margin-top:8px;}
+  .reward-order button{flex:1;border:1px solid var(--line);border-radius:7px;background:#FFF6FA;color:var(--primary-dark);padding:5px;font:700 11px 'Noto Sans TC',sans-serif;cursor:pointer;}
+  .reward-order button:disabled{opacity:.4;cursor:not-allowed;}
+  .reward-empty-note{font-size:12px;color:var(--ink-soft);padding:12px 0;line-height:1.5;min-width:180px;}
   .reward-add-card{
     display:flex; flex-direction:column; align-items:center; justify-content:center;
     color:var(--primary-dark); font-weight:700; font-size:13px;
@@ -977,6 +996,10 @@
           <div class="stat-value" id="totalMoney">$0</div>
         </div>
         <div class="stat-block">
+          <div class="stat-label">目前剩餘金額</div>
+          <div class="stat-value" id="availableMoney">$0</div>
+        </div>
+        <div class="stat-block">
           <div class="stat-label">今日已簽到</div>
           <div class="stat-value small" id="todayCount">0 / 0</div>
         </div>
@@ -988,6 +1011,17 @@
           <div class="stat-label">目前扣款中</div>
           <div class="stat-value small penalty-stat" id="totalPenalty">$0</div>
         </div>
+      </div>
+      <div class="cover-goal">
+        <div class="cover-goal-top"><strong id="coverGoalName">還沒有禮品目標</strong><span id="coverGoalPercent">—</span></div>
+        <div class="cover-goal-track"><div class="cover-goal-fill" id="coverGoalFill"></div></div>
+        <div class="cover-goal-bottom" id="coverGoalRemaining">先設定一個想兌換的禮品與金額</div>
+        <button class="cover-goal-link" id="coverGoalBtn">＋ 設定禮品目標</button>
+      </div>
+      <button class="reminder-settings-btn" id="openReminderBtn">⏰ 每日提醒：關閉</button>
+      <div class="reminder-banner" id="reminderBanner" role="status">
+        <span id="reminderMessage"></span>
+        <button id="dismissReminderBtn">今天知道了</button>
       </div>
     </div>
   </div>
@@ -1105,7 +1139,7 @@
       <div class="section-title" style="margin-top:0;">
         <div>
           <h2>🎁 獎勵目標</h2>
-          <div class="sub">上傳你想要的獎勵照片和金額，隨時看看存了多少</div>
+          <div class="sub">設定禮品與所需金額，達標後由你決定何時兌換；兌換才扣除餘額</div>
         </div>
         <button class="add-btn" id="openRewardAddBtn">＋ 新增獎勵</button>
       </div>
@@ -1117,7 +1151,7 @@
         <h2>金錢紀錄明細</h2>
         <div class="sub">以日為單位顯示，點開任一天可看到當天詳細收支</div>
       </div>
-      <button class="add-btn" id="clearLedgerBtn" style="background:var(--ink-soft);">清空紀錄列表</button>
+      <button class="add-btn" id="clearLedgerBtn" style="background:var(--ink-soft);">清空一般紀錄</button>
     </div>
     <div class="ledger-summary" style="margin-bottom:10px;">
       <div class="summary-block">
@@ -1129,7 +1163,11 @@
         <div class="summary-value" id="summaryPenaltyAll" style="color:var(--penalty);">$0</div>
       </div>
       <div class="summary-block">
-        <div class="summary-label">= 目前總額</div>
+        <div class="summary-label">已兌換禮品</div>
+        <div class="summary-value" id="summaryRedeemed">$0</div>
+      </div>
+      <div class="summary-block">
+        <div class="summary-label">= 目前剩餘金額</div>
         <div class="summary-value" id="summaryTotal">$0</div>
       </div>
     </div>
@@ -1301,6 +1339,28 @@
   </div>
 </div>
 
+<!-- Optional daily reminder settings -->
+<div class="modal-overlay" id="reminderModalOverlay">
+  <div class="modal">
+    <h3>⏰ 每日溫和提醒</h3>
+    <div class="field">
+      <label for="reminderEnabled"><input type="checkbox" id="reminderEnabled" style="width:auto;margin-right:6px;">啟用提醒</label>
+    </div>
+    <div class="field">
+      <label for="reminderTime">希望提醒的時間</label>
+      <input type="time" id="reminderTime" value="09:00">
+    </div>
+    <div class="field-hint">到時間後，只在這個網頁開著或重新打開時提示；不會因未簽到而增加扣款。關閉網頁後不保證背景通知。</div>
+    <div class="modal-actions">
+      <div></div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-secondary" id="reminderCancelBtn">取消</button>
+        <button class="btn btn-primary" id="reminderSaveBtn">儲存</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Reward add/edit modal -->
 <div class="modal-overlay" id="rewardModalOverlay">
   <div class="modal">
@@ -1320,7 +1380,7 @@
       <label for="fRewardAmount">需要金額（元）</label>
       <input type="number" id="fRewardAmount" placeholder="例如：2000" min="0" step="1">
     </div>
-    <div class="field-hint">存到的金額會跟「總累積金額」比較，達成時會顯示 🎉。照片建議 4MB 以下。</div>
+    <div class="field-hint">進度會依「目前剩餘金額」計算；達標後需由你按「兌換禮品」，才會扣除金額。照片建議 4MB 以下。</div>
     <div class="modal-actions">
       <button class="btn btn-danger" id="deleteRewardBtn" style="display:none;">刪除此獎勵</button>
       <div style="margin-left:auto; display:flex; gap:8px;">
@@ -1370,6 +1430,8 @@
   const GOAL_KEY = 'checkin-passbook-goal';
   const CAP_KEY = 'checkin-passbook-caps';
   const REWARDS_KEY = 'checkin-passbook-rewards';
+  const REDEMPTIONS_KEY = 'checkin-passbook-redemptions-v1';
+  const REMINDER_KEY = 'checkin-passbook-reminder-v1';
   const MONTHLY_STATS_KEY = 'checkin-passbook-monthly-miss-stats';
   const PLANNER_DAY_KEY = 'checkin-passbook-planner-day-v1';
   const PLANNER_LAST_KEY = 'checkin-passbook-planner-last-v1';
@@ -1390,6 +1452,10 @@
   let dailyCap = 0;
   let weeklyCap = 0;
   let rewards = [];
+  let redemptions = [];
+  let redemptionSaving = false;
+  let rewardReordering = false;
+  let reminderSettings = { enabled:false, time:'09:00', dismissedDate:'' };
   let editingRewardId = null;
   let currentRewardImage = '';
   let monthlyMissStats = {};
@@ -1408,7 +1474,7 @@
   const COLOR_ROTATION = ['#A6C2F2','#C9A6F2','#F2C49A','#F2A6C6','#A6E0CB','#F2E2A6','#A6D8F2','#E3B6F2'];
   const TYPE_LABELS = {
     checkin:'簽到收入', milestone:'里程碑獎金', penalty:'未簽到扣款',
-    refund_penalty:'補簽退款', opening_balance:'期初餘額轉入'
+    refund_penalty:'補簽退款', opening_balance:'期初餘額轉入', redemption:'兌換禮品'
   };
 
   // ---- storage abstraction: Claude's secure storage when available,
@@ -1564,6 +1630,8 @@
     await loadGoal();
     await loadNote();
     await loadRewards();
+    await loadRedemptions();
+    await loadReminderSettings();
     await loadPlanner();
     plannerReady = true;
 
@@ -1686,6 +1754,12 @@
   function getGrandTotal(){
     return items.reduce((s, it) => s + ((Number(it.incomeTotal) || 0) - (Number(it.penaltyTotal) || 0)), 0);
   }
+  function getRedeemedTotal(){
+    return redemptions.reduce((sum, r) => sum + (Number(r.amount) || 0), 0);
+  }
+  function getAvailableBalance(){
+    return Math.round((getGrandTotal() - getRedeemedTotal()) * 100) / 100;
+  }
   async function loadGoal(){
     const r = await storageGet(GOAL_KEY);
     goalAmount = (r && r.value) ? (parseFloat(r.value) || 0) : 0;
@@ -1713,6 +1787,98 @@
     } catch(e){ rewards = []; }
   }
   async function saveRewards(){ return await storageSet(REWARDS_KEY, JSON.stringify(rewards)); }
+  async function loadRedemptions(){
+    try{
+      const result = await storageGet(REDEMPTIONS_KEY);
+      const parsed = result && result.value ? JSON.parse(result.value) : [];
+      redemptions = Array.isArray(parsed) ? parsed.filter(r =>
+        r && Number.isFinite(Number(r.amount)) && Number(r.amount) > 0 &&
+        typeof r.date === 'string' && typeof r.id === 'string'
+      ) : [];
+    } catch(e){ redemptions = []; }
+  }
+  async function saveRedemptions(){
+    return await storageSet(REDEMPTIONS_KEY, JSON.stringify(redemptions));
+  }
+  async function loadReminderSettings(){
+    try{
+      const result = await storageGet(REMINDER_KEY);
+      const saved = result && result.value ? JSON.parse(result.value) : null;
+      if(saved && typeof saved === 'object'){
+        reminderSettings = {
+          enabled:saved.enabled === true,
+          time:/^([01]\d|2[0-3]):[0-5]\d$/.test(saved.time) ? saved.time : '09:00',
+          dismissedDate:typeof saved.dismissedDate === 'string' ? saved.dismissedDate : ''
+        };
+      }
+    } catch(e){ reminderSettings = { enabled:false, time:'09:00', dismissedDate:'' }; }
+  }
+  async function saveReminderSettings(){
+    return await storageSet(REMINDER_KEY, JSON.stringify(reminderSettings));
+  }
+  function refreshReminder(){
+    const banner = document.getElementById('reminderBanner');
+    const openButton = document.getElementById('openReminderBtn');
+    if(!banner || !openButton) return;
+    openButton.textContent = reminderSettings.enabled
+      ? `⏰ 每日提醒：${reminderSettings.time}` : '⏰ 每日提醒：關閉';
+    const effectiveToday = getEffectiveDateStr(new Date());
+    const pending = items.filter(item => !item.checkins.includes(effectiveToday)).length;
+    const [hour, minute] = reminderSettings.time.split(':').map(Number);
+    const [year, month, day] = effectiveToday.split('-').map(Number);
+    const dueAt = new Date(year, month - 1, day + (hour < 4 ? 1 : 0), hour, minute);
+    const show = reminderSettings.enabled && pending > 0 &&
+      reminderSettings.dismissedDate !== effectiveToday && new Date() >= dueAt;
+    banner.classList.toggle('visible', show);
+    if(show){
+      document.getElementById('reminderMessage').textContent =
+        `今天還有 ${pending} 個項目未簽到。有空再看看就好，不需要趕。`;
+    }
+  }
+
+  const reminderOverlay = document.getElementById('reminderModalOverlay');
+  const reminderEnabledInput = document.getElementById('reminderEnabled');
+  const reminderTimeInput = document.getElementById('reminderTime');
+  document.getElementById('openReminderBtn').addEventListener('click', () => {
+    reminderEnabledInput.checked = reminderSettings.enabled;
+    reminderTimeInput.value = reminderSettings.time;
+    reminderTimeInput.disabled = !reminderSettings.enabled;
+    reminderOverlay.classList.add('open');
+  });
+  reminderEnabledInput.addEventListener('change', () => {
+    reminderTimeInput.disabled = !reminderEnabledInput.checked;
+  });
+  document.getElementById('reminderCancelBtn').addEventListener('click', () => {
+    reminderOverlay.classList.remove('open');
+  });
+  document.getElementById('reminderSaveBtn').addEventListener('click', async () => {
+    const nextTime = reminderTimeInput.value;
+    if(!/^([01]\d|2[0-3]):[0-5]\d$/.test(nextTime)){
+      alert('請選擇有效的提醒時間。');
+      return;
+    }
+    const previous = { ...reminderSettings };
+    reminderSettings = { ...reminderSettings, enabled:reminderEnabledInput.checked, time:nextTime };
+    if(!(await saveReminderSettings())){
+      reminderSettings = previous;
+      alert('提醒設定儲存失敗，請稍後再試。');
+      return;
+    }
+    reminderOverlay.classList.remove('open');
+    refreshReminder();
+  });
+  document.getElementById('dismissReminderBtn').addEventListener('click', async () => {
+    const previous = reminderSettings.dismissedDate;
+    reminderSettings.dismissedDate = getEffectiveDateStr(new Date());
+    document.getElementById('reminderBanner').classList.remove('visible');
+    if(!(await saveReminderSettings())){
+      reminderSettings.dismissedDate = previous;
+      alert('提醒狀態未能儲存；重新開啟網頁時可能再次顯示。');
+    }
+  });
+  reminderOverlay.addEventListener('click', e => {
+    if(e.target === reminderOverlay) reminderOverlay.classList.remove('open');
+  });
 
   function buildGrid(item, effectiveToday, doneToday){
     const ms = Number(item.milestoneCount) || 0;
@@ -1738,6 +1904,27 @@
     return cells;
   }
 
+  function getCheckinStreak(item, effectiveToday){
+    // Only actual check-ins count. Makeups deliberately do not affect streaks.
+    const dates = [...new Set((item.checkins || []).filter(d => /^\d{4}-\d{2}-\d{2}$/.test(d)))].sort();
+    let best = 0;
+    let run = 0;
+    let previous = null;
+    dates.forEach(date => {
+      run = previous && addDaysStr(previous, 1) === date ? run + 1 : 1;
+      best = Math.max(best, run);
+      previous = date;
+    });
+    const checked = new Set(dates);
+    let cursor = checked.has(effectiveToday) ? effectiveToday : addDaysStr(effectiveToday, -1);
+    let current = 0;
+    while(checked.has(cursor)){
+      current++;
+      cursor = addDaysStr(cursor, -1);
+    }
+    return { current, best };
+  }
+
   function render(){
     const list = document.getElementById('itemsList');
     list.innerHTML = '';
@@ -1754,6 +1941,7 @@
       const penaltyTotal = Number(item.penaltyTotal) || 0;
       const total = income - penaltyTotal;
       const count = item.checkins.length;
+      const streak = getCheckinStreak(item, effectiveToday);
       grandTotal += total;
       totalCheckinsAll += count;
       const activeMissedCount = item.missed.filter(m => !m.refunded && m.penaltyAmount > 0).length;
@@ -1804,6 +1992,7 @@
             <div class="money-value" style="${total < 0 ? 'color:var(--penalty);' : ''}">${fmtMoney(total)}</div>
             <div class="money-sub-income">簽到收入 +${fmtMoney(income).replace('$','')}</div>
             ${penaltyTotal > 0 ? `<div class="money-sub">扣款累計 -${fmtMoney(penaltyTotal).replace('-','').replace('$','')}${activeMissedCount > 0 ? `（${activeMissedCount} 次）` : ''}</div>` : ''}
+            <div class="streak-note">🔥 連續 ${streak.current} 天・最高 ${streak.best} 天</div>
           </div>
         </div>
         <div class="item-bottom">
@@ -1818,9 +2007,15 @@
     const totalMoneyEl = document.getElementById('totalMoney');
     totalMoneyEl.textContent = fmtMoney(grandTotal);
     totalMoneyEl.style.color = grandTotal < 0 ? 'var(--penalty)' : '';
+    const availableMoneyEl = document.getElementById('availableMoney');
+    const available = getAvailableBalance();
+    availableMoneyEl.textContent = fmtMoney(available);
+    availableMoneyEl.style.color = available < 0 ? 'var(--penalty)' : '';
     document.getElementById('todayCount').textContent = `${todayDone} / ${items.length}`;
     document.getElementById('totalCheckins').textContent = totalCheckinsAll;
     document.getElementById('totalPenalty').textContent = fmtMoney(-grandPenalty);
+    renderCoverGoal();
+    refreshReminder();
 
     list.querySelectorAll('[data-checkin]').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -2421,10 +2616,22 @@
   });
 
   document.addEventListener('visibilitychange', async () => {
-    if(document.visibilityState === 'visible' && plannerReady && await ensurePlannerEffectiveDay()) renderPlanner();
+    if(document.visibilityState === 'visible'){
+      if(plannerReady && await ensurePlannerEffectiveDay()){
+        render();
+        renderCalendar();
+        renderLedger();
+      }
+      refreshReminder();
+    }
   });
   setInterval(async () => {
-    if(plannerReady && await ensurePlannerEffectiveDay()) renderPlanner();
+    if(plannerReady && await ensurePlannerEffectiveDay()){
+      render();
+      renderCalendar();
+      renderLedger();
+    }
+    refreshReminder();
   }, 60000);
 
   // ---------- Calendar ----------
@@ -2775,26 +2982,75 @@
   });
 
   // ---------- Rewards shelf ----------
+  function renderCoverGoal(){
+    const reward = rewards[0];
+    const nameEl = document.getElementById('coverGoalName');
+    const percentEl = document.getElementById('coverGoalPercent');
+    const fillEl = document.getElementById('coverGoalFill');
+    const remainingEl = document.getElementById('coverGoalRemaining');
+    const button = document.getElementById('coverGoalBtn');
+    if(!reward){
+      nameEl.textContent = '還沒有禮品目標';
+      percentEl.textContent = '—';
+      fillEl.style.width = '0%';
+      remainingEl.textContent = '先設定一個想兌換的禮品與金額';
+      button.textContent = '＋ 設定禮品目標';
+      return;
+    }
+    const amount = Number(reward.amount) || 0;
+    const available = getAvailableBalance();
+    const pct = amount > 0 ? Math.max(0, Math.min(100, available / amount * 100)) : 0;
+    nameEl.textContent = '🎁 ' + reward.name;
+    percentEl.textContent = amount > 0 ? pct.toFixed(1) + '%' : '—';
+    fillEl.style.width = pct + '%';
+    remainingEl.textContent = amount <= 0 ? '請設定目標金額' : available >= amount
+      ? '已達標，可以自行決定何時兌換'
+      : `還差 ${(100 - pct).toFixed(1)}%（${fmtMoney(amount - available)}）`;
+    button.textContent = '查看與兌換禮品';
+  }
+
   function renderRewards(){
     const wrap = document.getElementById('rewardsScroll');
     if(!wrap) return;
-    const total = getGrandTotal();
-    let html = '';
-    rewards.forEach(r => {
-      const pct = r.amount > 0 ? Math.max(0, Math.min(100, (total / r.amount) * 100)) : 0;
-      const reached = r.amount > 0 && total >= r.amount;
+    const available = getAvailableBalance();
+    let html = rewards.length ? '' : '<div class="reward-empty-note">先新增一個想兌換的禮品與目標金額。時間表和簽到照常使用，達標後再由你手動兌換。</div>';
+    rewards.forEach((r, index) => {
+      const amount = Number(r.amount) || 0;
+      const pct = amount > 0 ? Math.max(0, Math.min(100, (available / amount) * 100)) : 0;
+      const remainingPct = Math.max(0, Math.ceil((100 - pct) * 10) / 10);
+      const remainingAmount = Math.max(0, Math.round((amount - available) * 100) / 100);
+      const reached = amount > 0 && available >= amount;
+      const redeemedCount = redemptions.filter(x => x.rewardId === r.id).length;
       html += `<div class="reward-card" data-reward="${r.id}">
           ${r.image ? `<img class="reward-img" src="${r.image}" alt="${escapeHtml(r.name)}">` : `<div class="reward-img reward-img-empty">🎁</div>`}
           <div class="reward-name">${escapeHtml(r.name)}</div>
           <div class="reward-amount">${fmtMoney(r.amount)}</div>
           <div class="reward-progress-track"><div class="reward-progress-fill" style="width:${pct}%"></div></div>
-          <div class="reward-progress-label">${reached ? '🎉 已達成！' : pct.toFixed(0) + '%'}</div>
+          <div class="reward-progress-label">${amount <= 0 ? '請設定大於 0 的目標金額' : reached ? '🎉 已達標・剩餘 0%' : `已達 ${pct.toFixed(1)}%・還差 ${remainingPct}%（${fmtMoney(remainingAmount)}）`}</div>
+          ${redeemedCount ? `<div class="reward-progress-label">已兌換 ${redeemedCount} 次</div>` : ''}
+          <button class="reward-redeem-btn" data-redeem="${r.id}" ${reached && !redemptionSaving ? '' : 'disabled'}>${reached ? '兌換禮品・扣除餘額' : '尚未達標'}</button>
+          <div class="reward-order">
+            <button data-reward-move="${r.id}" data-direction="-1" title="把禮品目標往前移" ${index === 0 || rewardReordering ? 'disabled' : ''}>← 往前</button>
+            <button data-reward-move="${r.id}" data-direction="1" title="把禮品目標往後移" ${index === rewards.length - 1 || rewardReordering ? 'disabled' : ''}>往後 →</button>
+          </div>
         </div>`;
     });
     html += `<div class="reward-card reward-add-card" id="rewardAddCard">＋<br>新增獎勵</div>`;
     wrap.innerHTML = html;
     wrap.querySelectorAll('[data-reward]').forEach(card => {
       card.addEventListener('click', () => openRewardEdit(card.getAttribute('data-reward')));
+    });
+    wrap.querySelectorAll('[data-redeem]').forEach(button => {
+      button.addEventListener('click', e => {
+        e.stopPropagation();
+        redeemReward(button.getAttribute('data-redeem'));
+      });
+    });
+    wrap.querySelectorAll('[data-reward-move]').forEach(button => {
+      button.addEventListener('click', e => {
+        e.stopPropagation();
+        moveReward(button.getAttribute('data-reward-move'), Number(button.getAttribute('data-direction')));
+      });
     });
     const addCard = document.getElementById('rewardAddCard');
     if(addCard) addCard.addEventListener('click', openRewardAdd);
@@ -2807,6 +3063,53 @@
   const fRewardName = document.getElementById('fRewardName');
   const fRewardAmount = document.getElementById('fRewardAmount');
   const deleteRewardBtn = document.getElementById('deleteRewardBtn');
+  async function moveReward(id, direction){
+    if(rewardReordering || (direction !== -1 && direction !== 1)) return;
+    const index = rewards.findIndex(r => r.id === id);
+    const target = index + direction;
+    if(index < 0 || target < 0 || target >= rewards.length) return;
+    rewardReordering = true;
+    const previous = rewards.slice();
+    [rewards[index], rewards[target]] = [rewards[target], rewards[index]];
+    if(!(await saveRewards())){
+      rewards = previous;
+      alert('禮品排序未能儲存，請稍後再試。');
+    }
+    rewardReordering = false;
+    renderCoverGoal();
+    renderRewards();
+  }
+  document.getElementById('coverGoalBtn').addEventListener('click', () => {
+    if(!rewards.length){ openRewardAdd(); return; }
+    document.getElementById('tabLedgerBtn').click();
+    document.querySelector('.rewards-section').scrollIntoView({ behavior:'smooth', block:'start' });
+  });
+
+  async function redeemReward(id){
+    if(redemptionSaving) return;
+    const reward = rewards.find(r => r.id === id);
+    if(!reward) return;
+    const amount = Math.round(Number(reward.amount) * 100) / 100;
+    if(!Number.isFinite(amount) || amount <= 0){ alert('請先設定大於 0 的禮品金額。'); return; }
+    const available = getAvailableBalance();
+    if(available < amount){ alert(`目前還差 ${fmtMoney(amount - available)}，尚不能兌換。`); return; }
+    if(!confirm(`確定兌換「${reward.name}」嗎？\n將扣除 ${fmtMoney(amount)}，剩餘 ${fmtMoney(available - amount)}。`)) return;
+    redemptionSaving = true;
+    const redemption = {
+      id:txid(), rewardId:reward.id, rewardName:reward.name,
+      amount, date:getEffectiveDateStr(new Date()), ts:Date.now()
+    };
+    redemptions.push(redemption);
+    const saved = await saveRedemptions();
+    if(!saved){
+      redemptions.pop();
+      alert('兌換紀錄儲存失敗，餘額未扣除；請稍後再試。');
+    }
+    redemptionSaving = false;
+    render();
+    renderLedger();
+    if(saved) alert(`已兌換「${reward.name}」，目前剩餘 ${fmtMoney(getAvailableBalance())}。`);
+  }
 
   function openRewardAdd(){
     editingRewardId = null;
@@ -2859,8 +3162,9 @@
   document.getElementById('rewardSaveBtn').addEventListener('click', async () => {
     const name = fRewardName.value.trim();
     if(!name){ fRewardName.focus(); return; }
-    const amount = parseFloat(fRewardAmount.value) || 0;
-    const prevRewards = rewards;
+    const amount = Math.round((parseFloat(fRewardAmount.value) || 0) * 100) / 100;
+    if(!Number.isFinite(amount) || amount <= 0){ alert('禮品金額必須大於 0。'); fRewardAmount.focus(); return; }
+    const prevRewards = rewards.map(r => ({ ...r }));
     if(editingRewardId){
       const r = rewards.find(x => x.id === editingRewardId);
       if(r){ r.name = name; r.amount = amount; r.image = currentRewardImage; }
@@ -2874,13 +3178,20 @@
       return;
     }
     rewardModalOverlay.classList.remove('open');
+    renderCoverGoal();
     renderRewards();
   });
   deleteRewardBtn.addEventListener('click', async () => {
     if(!editingRewardId) return;
+    const previous = rewards;
     rewards = rewards.filter(r => r.id !== editingRewardId);
-    await saveRewards();
+    if(!(await saveRewards())){
+      rewards = previous;
+      alert('刪除失敗，請稍後再試。');
+      return;
+    }
     rewardModalOverlay.classList.remove('open');
+    renderCoverGoal();
     renderRewards();
   });
   rewardModalOverlay.addEventListener('click', (e) => { if(e.target === rewardModalOverlay) rewardModalOverlay.classList.remove('open'); });
@@ -2888,11 +3199,12 @@
 
   // ---------- Ledger (money log, grouped by day) ----------
   function renderLedgerSummary(){
-    const total = getGrandTotal();
+    const total = getAvailableBalance();
     const totalIncome = items.reduce((s, it) => s + (Number(it.incomeTotal) || 0), 0);
     const totalPenalty = items.reduce((s, it) => s + (Number(it.penaltyTotal) || 0), 0);
     document.getElementById('summaryIncome').textContent = fmtMoney(totalIncome);
     document.getElementById('summaryPenaltyAll').textContent = totalPenalty > 0 ? fmtMoney(-totalPenalty) : '$0';
+    document.getElementById('summaryRedeemed').textContent = fmtMoney(-getRedeemedTotal());
 
     const summaryTotalEl = document.getElementById('summaryTotal');
     summaryTotalEl.textContent = fmtMoney(total);
@@ -2927,7 +3239,12 @@
 
   function groupTransactionsByDay(){
     const map = {};
-    transactions.forEach(t => {
+    const redemptionTransactions = redemptions.map(r => ({
+      id:r.id, date:r.date, ts:r.ts, itemId:null, itemName:r.rewardName,
+      icon:'🎁', color:'#E85C8A', type:'redemption', amount:-Number(r.amount),
+      note:'已兌換禮品・從剩餘金額扣除'
+    }));
+    transactions.concat(redemptionTransactions).forEach(t => {
       if(!map[t.date]) map[t.date] = [];
       map[t.date].push(t);
     });
@@ -2938,7 +3255,7 @@
     renderLedgerSummary();
     renderRewards();
     const body = document.getElementById('ledgerBody');
-    if(transactions.length === 0){
+    if(transactions.length === 0 && redemptions.length === 0){
       body.innerHTML = '<div class="empty-state">尚無金錢紀錄</div>';
       return;
     }
@@ -2995,7 +3312,7 @@
         </div>
         <div style="display:flex;align-items:center;gap:8px;">
           <div class="ledger-amt ${cls}" style="font-size:14px;">${fmtSigned(t.amount)}</div>
-          <button class="ledger-del-btn" data-del="${t.id}" title="刪除這筆紀錄">🗑</button>
+          ${t.type === 'redemption' ? '' : `<button class="ledger-del-btn" data-del="${t.id}" title="刪除這筆紀錄">🗑</button>`}
         </div>
       `;
       list.appendChild(row);
@@ -3072,13 +3389,13 @@
     if(clearLedgerBtn.classList.contains('armed')){
       clearAllTransactions();
       clearLedgerBtn.classList.remove('armed');
-      clearLedgerBtn.textContent = '清空紀錄列表';
+      clearLedgerBtn.textContent = '清空一般紀錄';
     } else {
       clearLedgerBtn.classList.add('armed');
-      clearLedgerBtn.textContent = '確定清空全部？';
+      clearLedgerBtn.textContent = '確定清空一般紀錄？';
       setTimeout(() => {
         clearLedgerBtn.classList.remove('armed');
-        clearLedgerBtn.textContent = '清空紀錄列表';
+        clearLedgerBtn.textContent = '清空一般紀錄';
       }, 3000);
     }
   });
