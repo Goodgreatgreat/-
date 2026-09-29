@@ -254,7 +254,7 @@
     flex-wrap:wrap;
   }
 
-  .grid{display:flex; gap:6px; flex-wrap:wrap; max-width:380px;}
+  .grid{display:flex; gap:6px; flex-wrap:wrap; max-width:380px; flex:1 1 280px;}
   .grid-cell{
     display:flex;
     flex-direction:column;
@@ -286,7 +286,7 @@
     white-space:nowrap;
   }
 
-  .money-block{text-align:right;}
+  .money-block{text-align:right; margin-left:auto; flex:0 0 150px; align-self:flex-end;}
   .money-label{font-size:11px; color:var(--ink-soft);}
   .money-value{
     font-family:'JetBrains Mono', monospace;
@@ -812,6 +812,24 @@
     line-height:1.5;
     margin-bottom:10px;
   }
+  .planner-ratio{
+    border:1px solid #F2D7E1;
+    border-radius:12px;
+    background:#FFF9FB;
+    padding:11px;
+    margin-bottom:10px;
+  }
+  .planner-ratio-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px;}
+  .planner-ratio-head strong{font-size:13px;}
+  .planner-ratio-head span{font-size:10.5px;color:var(--ink-soft);}
+  .planner-ratio-bar{height:10px;border-radius:999px;overflow:hidden;display:flex;background:#F4E7EC;margin-bottom:8px;}
+  .planner-ratio-segment{height:100%;min-width:2px;}
+  .planner-ratio-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:6px 12px;}
+  .planner-ratio-item{display:flex;align-items:center;gap:6px;min-width:0;font-size:11px;color:var(--ink-soft);}
+  .planner-ratio-dot{width:9px;height:9px;border-radius:50%;flex:0 0 9px;}
+  .planner-ratio-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .planner-ratio-value{margin-left:auto;color:var(--ink);font-family:'JetBrains Mono',monospace;font-weight:700;white-space:nowrap;}
+  .planner-ratio-empty{font-size:11.5px;color:var(--ink-soft);line-height:1.5;}
   .planner-scroll{
     max-height:620px;
     overflow-y:auto;
@@ -924,6 +942,15 @@
   .misc-row{display:flex;align-items:center;gap:9px;border:1px solid var(--line);border-radius:10px;padding:8px 10px;}
   .misc-row-name{flex:1;font-size:13px;font-weight:700;}
   .misc-row button{border:0;background:#FFF1F6;color:var(--primary-dark);border-radius:7px;padding:6px 8px;cursor:pointer;}
+  .category-form{display:flex;align-items:flex-end;gap:8px;flex-wrap:wrap;margin:12px 0;}
+  .category-form .field{margin:0;flex:1;min-width:150px;}
+  .category-list{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:16px;}
+  .category-pill{display:flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:999px;padding:6px 8px 6px 10px;background:#fff;font-size:12px;font-weight:700;}
+  .category-pill button{border:0;background:transparent;color:var(--penalty);cursor:pointer;padding:1px 3px;}
+  .category-assignment{display:flex;flex-direction:column;gap:8px;max-height:320px;overflow:auto;}
+  .category-source-row{display:flex;align-items:center;gap:9px;border:1px solid var(--line);border-radius:10px;padding:8px 10px;}
+  .category-source-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12.5px;font-weight:700;}
+  .category-source-row select{max-width:145px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink);padding:6px;font-family:'Noto Sans TC',sans-serif;}
 
   footer.note{
     text-align:center;
@@ -1050,6 +1077,7 @@
         <button class="planner-mini-btn" id="plannerApplyLastBtn">套用上次配置</button>
         <button class="planner-mini-btn" id="plannerClearBtn">清空今天</button>
         <button class="planner-mini-btn" id="plannerManageMiscBtn">管理雜項</button>
+        <button class="planner-mini-btn" id="plannerManageCategoriesBtn">管理分類</button>
       </div>
 
       <div class="planner-palette-head">
@@ -1058,6 +1086,7 @@
       </div>
       <div class="planner-palette" id="plannerPalette"></div>
       <div class="planner-hint" id="plannerHint">先點上方一個色塊，再點時間表中的空白時段即可加入。點兩個已排定色塊可交換內容。</div>
+      <div class="planner-ratio" id="plannerRatio"></div>
       <div class="planner-scroll" id="plannerScroll">
         <div class="planner-timeline" id="plannerTimeline"></div>
       </div>
@@ -1426,6 +1455,33 @@
   </div>
 </div>
 
+<!-- Persistent planner categories and one-time source assignments -->
+<div class="modal-overlay" id="plannerCategoryModalOverlay">
+  <div class="modal">
+    <h3>管理時間分類</h3>
+    <div class="field-hint" style="margin-top:-8px;">先新增分類，再替每個色塊素材選擇分類。設定會持續保存，不必每天重設。</div>
+    <div class="category-form">
+      <div class="field">
+        <label for="plannerCategoryName">新分類名稱</label>
+        <input type="text" id="plannerCategoryName" placeholder="例如：學習、工作、休息">
+      </div>
+      <div class="field" style="flex:0 0 92px;min-width:92px;">
+        <label for="plannerCategoryColor">顏色</label>
+        <input type="color" id="plannerCategoryColor" value="#C23B66">
+      </div>
+      <button class="btn btn-primary" id="plannerCategoryAddBtn">新增分類</button>
+    </div>
+    <div class="category-list" id="plannerCategoryList"></div>
+    <h4 style="margin:8px 0 10px;">素材分類</h4>
+    <div class="category-assignment" id="plannerCategoryAssignments"></div>
+    <div class="modal-actions">
+      <div style="margin-left:auto;">
+        <button class="btn btn-primary" id="plannerCategoryCloseBtn">完成</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 (function(){
   const STORAGE_KEY = 'checkin-passbook-items';
@@ -1440,6 +1496,8 @@
   const PLANNER_DAY_KEY = 'checkin-passbook-planner-day-v1';
   const PLANNER_LAST_KEY = 'checkin-passbook-planner-last-v1';
   const PLANNER_MISC_KEY = 'checkin-passbook-planner-misc-v1';
+  const PLANNER_CATEGORIES_KEY = 'checkin-passbook-planner-categories-v1';
+  const PLANNER_CATEGORY_MAP_KEY = 'checkin-passbook-planner-category-map-v1';
   const PLANNER_SLOT_MINUTES = 30;
   const PLANNER_SLOT_PX = 46;
   const PLANNER_TOP_INSET = 12;
@@ -1466,6 +1524,8 @@
   let plannerDay = null;
   let plannerLast = null;
   let plannerMisc = [];
+  let plannerCategories = [];
+  let plannerCategoryMap = {};
   let plannerReady = false;
   let plannerSelectedSourceKey = null;
   let plannerSelectedBlockId = null;
@@ -2185,6 +2245,8 @@
   async function savePlannerDay(){ return await storageSet(PLANNER_DAY_KEY, JSON.stringify(plannerDay)); }
   async function savePlannerLast(){ return await storageSet(PLANNER_LAST_KEY, JSON.stringify(plannerLast)); }
   async function savePlannerMisc(){ return await storageSet(PLANNER_MISC_KEY, JSON.stringify(plannerMisc)); }
+  async function savePlannerCategories(){ return await storageSet(PLANNER_CATEGORIES_KEY, JSON.stringify(plannerCategories)); }
+  async function savePlannerCategoryMap(){ return await storageSet(PLANNER_CATEGORY_MAP_KEY, JSON.stringify(plannerCategoryMap)); }
 
   async function loadPlanner(){
     try{
@@ -2193,6 +2255,17 @@
       if(!Array.isArray(plannerMisc)) plannerMisc = plannerDefaultMisc();
     } catch(e){ plannerMisc = plannerDefaultMisc(); }
     if(!(await storageGet(PLANNER_MISC_KEY))) await savePlannerMisc();
+
+    try{
+      const categoryRes = await storageGet(PLANNER_CATEGORIES_KEY);
+      plannerCategories = categoryRes && categoryRes.value ? JSON.parse(categoryRes.value) : [];
+      if(!Array.isArray(plannerCategories)) plannerCategories = [];
+    } catch(e){ plannerCategories = []; }
+    try{
+      const mapRes = await storageGet(PLANNER_CATEGORY_MAP_KEY);
+      plannerCategoryMap = mapRes && mapRes.value ? JSON.parse(mapRes.value) : {};
+      if(!plannerCategoryMap || Array.isArray(plannerCategoryMap) || typeof plannerCategoryMap !== 'object') plannerCategoryMap = {};
+    } catch(e){ plannerCategoryMap = {}; }
 
     try{
       const lastRes = await storageGet(PLANNER_LAST_KEY);
@@ -2244,6 +2317,53 @@
     const source = plannerSources().find(s => s.sourceType === block.sourceType && s.sourceId === block.sourceId);
     if(source){ block.name = source.name; block.icon = source.icon; block.color = source.color; }
     return block;
+  }
+
+  function plannerSourceMapKey(sourceType, sourceId){ return sourceType + ':' + sourceId; }
+
+  function plannerMinutesText(minutes){
+    const hours = Math.floor(minutes / 60);
+    const remainder = minutes % 60;
+    if(hours && remainder) return `${hours} 小時 ${remainder} 分`;
+    if(hours) return `${hours} 小時`;
+    return `${remainder} 分`;
+  }
+
+  function renderPlannerRatio(){
+    const wrap = document.getElementById('plannerRatio');
+    if(!wrap || !plannerDay) return;
+    const total = plannerDay.blocks.reduce((sum, block) => sum + (Number(block.duration) || 0), 0);
+    if(total <= 0){
+      wrap.innerHTML = `<div class="planner-ratio-head"><strong>今日時間使用比例</strong><span>以已安排色塊為 100%</span></div>
+        <div class="planner-ratio-empty">排入色塊後，這裡會自動統計各分類的時間與百分比。</div>`;
+      return;
+    }
+    const validCategoryIds = new Set(plannerCategories.map(category => category.id));
+    const totals = {};
+    plannerDay.blocks.forEach(block => {
+      const key = plannerSourceMapKey(block.sourceType, block.sourceId);
+      const mappedId = plannerCategoryMap[key];
+      const categoryId = validCategoryIds.has(mappedId) ? mappedId : '__uncategorized__';
+      totals[categoryId] = (totals[categoryId] || 0) + (Number(block.duration) || 0);
+    });
+    const rows = Object.entries(totals).map(([id, minutes]) => {
+      const category = plannerCategories.find(c => c.id === id);
+      return {
+        id,
+        name: category ? category.name : '未分類',
+        color: category ? category.color : '#B8AAB0',
+        minutes,
+        percent: minutes / total * 100
+      };
+    }).sort((a,b) => b.minutes - a.minutes);
+    const bar = rows.map(row => `<div class="planner-ratio-segment" style="width:${row.percent}%;background:${row.color}"></div>`).join('');
+    const list = rows.map(row => `<div class="planner-ratio-item">
+      <span class="planner-ratio-dot" style="background:${row.color}"></span>
+      <span class="planner-ratio-name">${escapeHtml(row.name)}</span>
+      <span class="planner-ratio-value">${plannerMinutesText(row.minutes)}・${row.percent.toFixed(1)}%</span>
+    </div>`).join('');
+    wrap.innerHTML = `<div class="planner-ratio-head"><strong>今日時間使用比例</strong><span>共安排 ${plannerMinutesText(total)}・以已安排色塊為 100%</span></div>
+      <div class="planner-ratio-bar">${bar}</div><div class="planner-ratio-list">${list}</div>`;
   }
 
   function plannerTimeLabel(minutes){
@@ -2392,6 +2512,7 @@
     } else {
       hint.textContent = '先點上方一個色塊，再點時間表中的空白時段即可加入。點兩個已排定色塊可交換內容。';
     }
+    renderPlannerRatio();
     syncPlannerMobileMode();
     if(plannerMobileNeedsFocus && plannerIsMobileCompact()){
       requestAnimationFrame(() => {
@@ -2605,6 +2726,86 @@
   document.getElementById('plannerMiscCloseBtn').addEventListener('click', () => plannerMiscOverlay.classList.remove('open'));
   document.getElementById('plannerMiscSaveBtn').addEventListener('click', savePlannerMiscForm);
   plannerMiscOverlay.addEventListener('click', e => { if(e.target === plannerMiscOverlay) plannerMiscOverlay.classList.remove('open'); });
+
+  const plannerCategoryOverlay = document.getElementById('plannerCategoryModalOverlay');
+  const plannerCategoryName = document.getElementById('plannerCategoryName');
+  const plannerCategoryColor = document.getElementById('plannerCategoryColor');
+
+  function renderPlannerCategoryManager(){
+    const categoryList = document.getElementById('plannerCategoryList');
+    const assignments = document.getElementById('plannerCategoryAssignments');
+    categoryList.innerHTML = plannerCategories.length ? plannerCategories.map(category => `
+      <div class="category-pill">
+        <span class="planner-ratio-dot" style="background:${category.color}"></span>
+        <span>${escapeHtml(category.name)}</span>
+        <button data-category-delete="${category.id}" title="刪除分類">×</button>
+      </div>`).join('') : '<div class="field-hint">尚未新增分類；目前所有時間會計入「未分類」。</div>';
+
+    const options = `<option value="">未分類</option>` + plannerCategories.map(category =>
+      `<option value="${category.id}">${escapeHtml(category.name)}</option>`
+    ).join('');
+    const sources = plannerSources();
+    assignments.innerHTML = sources.length ? sources.map(source => {
+      const key = plannerSourceMapKey(source.sourceType, source.sourceId);
+      return `<div class="category-source-row">
+        <span class="name-swatch" style="background:${source.color}">${escapeHtml(source.icon || '•')}</span>
+        <span class="category-source-name">${escapeHtml(source.name)}</span>
+        <select data-category-source="${key}" aria-label="選擇素材分類">${options}</select>
+      </div>`;
+    }).join('') : '<div class="empty-state">目前沒有色塊素材</div>';
+
+    assignments.querySelectorAll('[data-category-source]').forEach(select => {
+      const key = select.getAttribute('data-category-source');
+      select.value = plannerCategoryMap[key] || '';
+      select.addEventListener('change', async () => {
+        if(select.value) plannerCategoryMap[key] = select.value;
+        else delete plannerCategoryMap[key];
+        await savePlannerCategoryMap();
+        renderPlannerRatio();
+      });
+    });
+    categoryList.querySelectorAll('[data-category-delete]').forEach(button => {
+      button.addEventListener('click', async () => {
+        const id = button.getAttribute('data-category-delete');
+        const category = plannerCategories.find(c => c.id === id);
+        if(!category || !confirm(`確定刪除「${category.name}」分類嗎？原本屬於它的素材會改為未分類。`)) return;
+        plannerCategories = plannerCategories.filter(c => c.id !== id);
+        Object.keys(plannerCategoryMap).forEach(key => {
+          if(plannerCategoryMap[key] === id) delete plannerCategoryMap[key];
+        });
+        await savePlannerCategories();
+        await savePlannerCategoryMap();
+        renderPlannerCategoryManager();
+        renderPlannerRatio();
+      });
+    });
+  }
+
+  async function addPlannerCategory(){
+    const name = plannerCategoryName.value.trim();
+    if(!name){ plannerCategoryName.focus(); return; }
+    if(plannerCategories.some(category => category.name.toLowerCase() === name.toLowerCase())){
+      alert('已有相同名稱的分類');
+      return;
+    }
+    plannerCategories.push({ id:uid(), name, color:plannerCategoryColor.value || '#C23B66' });
+    await savePlannerCategories();
+    plannerCategoryName.value = '';
+    renderPlannerCategoryManager();
+    renderPlannerRatio();
+  }
+
+  document.getElementById('plannerManageCategoriesBtn').addEventListener('click', () => {
+    plannerCategoryName.value = '';
+    renderPlannerCategoryManager();
+    plannerCategoryOverlay.classList.add('open');
+  });
+  document.getElementById('plannerCategoryAddBtn').addEventListener('click', addPlannerCategory);
+  plannerCategoryName.addEventListener('keydown', e => {
+    if(e.key === 'Enter'){ e.preventDefault(); addPlannerCategory(); }
+  });
+  document.getElementById('plannerCategoryCloseBtn').addEventListener('click', () => plannerCategoryOverlay.classList.remove('open'));
+  plannerCategoryOverlay.addEventListener('click', e => { if(e.target === plannerCategoryOverlay) plannerCategoryOverlay.classList.remove('open'); });
 
   document.getElementById('plannerMobileToggle').addEventListener('click', () => {
     if(!plannerIsMobile()) return;
