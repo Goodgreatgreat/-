@@ -247,14 +247,14 @@
 
   .item-mid{
     margin-top:14px;
-    display:flex;
-    justify-content:space-between;
+    display:grid;
+    grid-template-columns:minmax(0,380px) minmax(128px,150px);
+    justify-content:start;
     align-items:flex-end;
-    gap:14px;
-    flex-wrap:wrap;
+    gap:18px;
   }
 
-  .grid{display:flex; gap:6px; flex-wrap:wrap; max-width:380px; flex:1 1 280px;}
+  .grid{display:flex; gap:6px; flex-wrap:wrap; width:100%; max-width:380px;}
   .grid-cell{
     display:flex;
     flex-direction:column;
@@ -286,7 +286,7 @@
     white-space:nowrap;
   }
 
-  .money-block{text-align:right; margin-left:auto; flex:0 0 150px; align-self:flex-end;}
+  .money-block{text-align:right; width:100%; align-self:end;}
   .money-label{font-size:11px; color:var(--ink-soft);}
   .money-value{
     font-family:'JetBrains Mono', monospace;
@@ -813,22 +813,31 @@
     margin-bottom:10px;
   }
   .planner-ratio{
-    border:1px solid #F2D7E1;
-    border-radius:12px;
-    background:#FFF9FB;
-    padding:11px;
-    margin-bottom:10px;
+    border:1px solid #EFCFD9;
+    border-radius:14px;
+    background:linear-gradient(145deg,#FFFDFE 0%,#FFF5F8 100%);
+    padding:13px;
+    margin-bottom:12px;
+    box-shadow:0 8px 18px -18px rgba(122,39,72,.75);
   }
   .planner-ratio-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px;}
   .planner-ratio-head strong{font-size:13px;}
-  .planner-ratio-head span{font-size:10.5px;color:var(--ink-soft);}
-  .planner-ratio-bar{height:10px;border-radius:999px;overflow:hidden;display:flex;background:#F4E7EC;margin-bottom:8px;}
-  .planner-ratio-segment{height:100%;min-width:2px;}
-  .planner-ratio-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:6px 12px;}
-  .planner-ratio-item{display:flex;align-items:center;gap:6px;min-width:0;font-size:11px;color:var(--ink-soft);}
+  .planner-ratio-meta{display:flex;align-items:center;gap:7px;flex-wrap:wrap;justify-content:flex-end;}
+  .planner-ratio-total{font-size:10.5px;color:var(--primary-dark);font-weight:700;background:#FBE5EC;border-radius:999px;padding:4px 8px;white-space:nowrap;}
+  .planner-ratio-manage{border:0;background:transparent;color:var(--ink-soft);font:700 10.5px 'Noto Sans TC',sans-serif;cursor:pointer;padding:4px 2px;}
+  .planner-ratio-manage:hover{color:var(--primary-dark);}
+  .planner-ratio-note{font-size:10.5px;color:var(--ink-soft);margin:-2px 0 9px;}
+  .planner-ratio-bar{height:13px;border-radius:999px;overflow:hidden;display:flex;background:#F4E7EC;margin-bottom:10px;border:2px solid #fff;box-shadow:0 0 0 1px #F1DCE3;}
+  .planner-ratio-segment{height:100%;min-width:2px;border-right:2px solid rgba(255,255,255,.8);}
+  .planner-ratio-segment:last-child{border-right:0;}
+  .planner-ratio-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:7px;}
+  .planner-ratio-item{min-width:0;font-size:11px;color:var(--ink-soft);background:rgba(255,255,255,.72);border:1px solid #F2E2E8;border-left:3px solid var(--category-color);border-radius:9px;padding:7px 8px;}
+  .planner-ratio-line{display:flex;align-items:center;gap:6px;min-width:0;}
   .planner-ratio-dot{width:9px;height:9px;border-radius:50%;flex:0 0 9px;}
   .planner-ratio-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .planner-ratio-value{margin-left:auto;color:var(--ink);font-family:'JetBrains Mono',monospace;font-weight:700;white-space:nowrap;}
+  .planner-ratio-mini{height:4px;border-radius:999px;background:#F4E9ED;overflow:hidden;margin-top:6px;}
+  .planner-ratio-mini span{display:block;height:100%;border-radius:inherit;background:var(--category-color);}
   .planner-ratio-empty{font-size:11.5px;color:var(--ink-soft);line-height:1.5;}
   .planner-scroll{
     max-height:620px;
@@ -965,6 +974,11 @@
     .cal-day{min-height:46px;}
     .ledger-day-row{grid-template-columns:52px 1fr 1fr 1fr 16px; font-size:11px;}
     .stat-week-cols{gap:10px;}
+    .item-mid{grid-template-columns:1fr;gap:10px;}
+    .money-block{width:auto;justify-self:start;text-align:left;}
+    .planner-ratio-head{align-items:flex-start;}
+    .planner-ratio-meta{justify-content:flex-start;}
+    .planner-ratio-list{grid-template-columns:1fr;}
     .planner-card{padding:13px 10px;}
     .planner-heading{align-items:flex-start;flex-direction:column;gap:4px;}
     .planner-range{gap:6px;}
@@ -2334,8 +2348,9 @@
     if(!wrap || !plannerDay) return;
     const total = plannerDay.blocks.reduce((sum, block) => sum + (Number(block.duration) || 0), 0);
     if(total <= 0){
-      wrap.innerHTML = `<div class="planner-ratio-head"><strong>今日時間使用比例</strong><span>以已安排色塊為 100%</span></div>
+      wrap.innerHTML = `<div class="planner-ratio-head"><strong>今日時間使用比例</strong><div class="planner-ratio-meta"><button class="planner-ratio-manage" type="button">調整分類</button></div></div>
         <div class="planner-ratio-empty">排入色塊後，這裡會自動統計各分類的時間與百分比。</div>`;
+      wrap.querySelector('.planner-ratio-manage').addEventListener('click', openPlannerCategoryManager);
       return;
     }
     const validCategoryIds = new Set(plannerCategories.map(category => category.id));
@@ -2357,13 +2372,18 @@
       };
     }).sort((a,b) => b.minutes - a.minutes);
     const bar = rows.map(row => `<div class="planner-ratio-segment" style="width:${row.percent}%;background:${row.color}"></div>`).join('');
-    const list = rows.map(row => `<div class="planner-ratio-item">
-      <span class="planner-ratio-dot" style="background:${row.color}"></span>
-      <span class="planner-ratio-name">${escapeHtml(row.name)}</span>
-      <span class="planner-ratio-value">${plannerMinutesText(row.minutes)}・${row.percent.toFixed(1)}%</span>
+    const list = rows.map(row => `<div class="planner-ratio-item" style="--category-color:${row.color}">
+      <div class="planner-ratio-line">
+        <span class="planner-ratio-dot" style="background:${row.color}"></span>
+        <span class="planner-ratio-name">${escapeHtml(row.name)}</span>
+        <span class="planner-ratio-value">${plannerMinutesText(row.minutes)}・${row.percent.toFixed(1)}%</span>
+      </div>
+      <div class="planner-ratio-mini"><span style="width:${row.percent}%"></span></div>
     </div>`).join('');
-    wrap.innerHTML = `<div class="planner-ratio-head"><strong>今日時間使用比例</strong><span>共安排 ${plannerMinutesText(total)}・以已安排色塊為 100%</span></div>
+    wrap.innerHTML = `<div class="planner-ratio-head"><strong>今日時間使用比例</strong><div class="planner-ratio-meta"><span class="planner-ratio-total">共安排 ${plannerMinutesText(total)}</span><button class="planner-ratio-manage" type="button">調整分類</button></div></div>
+      <div class="planner-ratio-note">百分比以今天已排入的色塊時間為 100%，空白時段不計入。</div>
       <div class="planner-ratio-bar">${bar}</div><div class="planner-ratio-list">${list}</div>`;
+    wrap.querySelector('.planner-ratio-manage').addEventListener('click', openPlannerCategoryManager);
   }
 
   function plannerTimeLabel(minutes){
@@ -2795,11 +2815,13 @@
     renderPlannerRatio();
   }
 
-  document.getElementById('plannerManageCategoriesBtn').addEventListener('click', () => {
+  function openPlannerCategoryManager(){
     plannerCategoryName.value = '';
     renderPlannerCategoryManager();
     plannerCategoryOverlay.classList.add('open');
-  });
+  }
+
+  document.getElementById('plannerManageCategoriesBtn').addEventListener('click', openPlannerCategoryManager);
   document.getElementById('plannerCategoryAddBtn').addEventListener('click', addPlannerCategory);
   plannerCategoryName.addEventListener('keydown', e => {
     if(e.key === 'Enter'){ e.preventDefault(); addPlannerCategory(); }
