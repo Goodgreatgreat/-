@@ -960,6 +960,10 @@
   .category-source-row{display:flex;align-items:center;gap:9px;border:1px solid var(--line);border-radius:10px;padding:8px 10px;}
   .category-source-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12.5px;font-weight:700;}
   .category-source-row select{max-width:145px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink);padding:6px;font-family:'Noto Sans TC',sans-serif;}
+  .category-option{display:flex;align-items:flex-start;gap:9px;border:1px solid #F0DCE3;background:#FFF8FA;border-radius:10px;padding:9px 10px;margin-bottom:15px;cursor:pointer;}
+  .category-option input{margin-top:3px;accent-color:var(--primary);}
+  .category-option strong{display:block;font-size:12.5px;}
+  .category-option span{display:block;font-size:10.5px;color:var(--ink-soft);margin-top:2px;line-height:1.45;}
 
   footer.note{
     text-align:center;
@@ -1486,6 +1490,10 @@
       <button class="btn btn-primary" id="plannerCategoryAddBtn">新增分類</button>
     </div>
     <div class="category-list" id="plannerCategoryList"></div>
+    <label class="category-option" for="plannerIncludeUncategorized">
+      <input type="checkbox" id="plannerIncludeUncategorized">
+      <span><strong>將未分類納入百分比</strong><span>關閉時，未分類色塊仍保留在時間表，但不會進入比例與分母。</span></span>
+    </label>
     <h4 style="margin:8px 0 10px;">素材分類</h4>
     <div class="category-assignment" id="plannerCategoryAssignments"></div>
     <div class="modal-actions">
@@ -1512,6 +1520,7 @@
   const PLANNER_MISC_KEY = 'checkin-passbook-planner-misc-v1';
   const PLANNER_CATEGORIES_KEY = 'checkin-passbook-planner-categories-v1';
   const PLANNER_CATEGORY_MAP_KEY = 'checkin-passbook-planner-category-map-v1';
+  const PLANNER_CATEGORY_SETTINGS_KEY = 'checkin-passbook-planner-category-settings-v1';
   const PLANNER_SLOT_MINUTES = 30;
   const PLANNER_SLOT_PX = 46;
   const PLANNER_TOP_INSET = 12;
@@ -1540,6 +1549,7 @@
   let plannerMisc = [];
   let plannerCategories = [];
   let plannerCategoryMap = {};
+  let plannerCategorySettings = { includeUncategorized:false };
   let plannerReady = false;
   let plannerSelectedSourceKey = null;
   let plannerSelectedBlockId = null;
@@ -2261,6 +2271,7 @@
   async function savePlannerMisc(){ return await storageSet(PLANNER_MISC_KEY, JSON.stringify(plannerMisc)); }
   async function savePlannerCategories(){ return await storageSet(PLANNER_CATEGORIES_KEY, JSON.stringify(plannerCategories)); }
   async function savePlannerCategoryMap(){ return await storageSet(PLANNER_CATEGORY_MAP_KEY, JSON.stringify(plannerCategoryMap)); }
+  async function savePlannerCategorySettings(){ return await storageSet(PLANNER_CATEGORY_SETTINGS_KEY, JSON.stringify(plannerCategorySettings)); }
 
   async function loadPlanner(){
     try{
@@ -2280,6 +2291,11 @@
       plannerCategoryMap = mapRes && mapRes.value ? JSON.parse(mapRes.value) : {};
       if(!plannerCategoryMap || Array.isArray(plannerCategoryMap) || typeof plannerCategoryMap !== 'object') plannerCategoryMap = {};
     } catch(e){ plannerCategoryMap = {}; }
+    try{
+      const settingsRes = await storageGet(PLANNER_CATEGORY_SETTINGS_KEY);
+      const savedSettings = settingsRes && settingsRes.value ? JSON.parse(settingsRes.value) : {};
+      plannerCategorySettings = { includeUncategorized:savedSettings.includeUncategorized === true };
+    } catch(e){ plannerCategorySettings = { includeUncategorized:false }; }
 
     try{
       const lastRes = await storageGet(PLANNER_LAST_KEY);
@@ -2361,14 +2377,23 @@
       const categoryId = validCategoryIds.has(mappedId) ? mappedId : '__uncategorized__';
       totals[categoryId] = (totals[categoryId] || 0) + (Number(block.duration) || 0);
     });
-    const rows = Object.entries(totals).map(([id, minutes]) => {
+    const uncategorizedMinutes = totals.__uncategorized__ || 0;
+    const includedTotals = Object.entries(totals).filter(([id]) => plannerCategorySettings.includeUncategorized || id !== '__uncategorized__');
+    const percentageTotal = includedTotals.reduce((sum, entry) => sum + entry[1], 0);
+    if(percentageTotal <= 0){
+      wrap.innerHTML = `<div class="planner-ratio-head"><strong>今日時間使用比例</strong><div class="planner-ratio-meta"><span class="planner-ratio-total">共安排 ${plannerMinutesText(total)}</span><button class="planner-ratio-manage" type="button">調整分類</button></div></div>
+        <div class="planner-ratio-empty">目前排入的 ${plannerMinutesText(uncategorizedMinutes)} 都尚未分類，因此不納入百分比。請替素材選擇分類，或在分類設定中開啟「將未分類納入百分比」。</div>`;
+      wrap.querySelector('.planner-ratio-manage').addEventListener('click', openPlannerCategoryManager);
+      return;
+    }
+    const rows = includedTotals.map(([id, minutes]) => {
       const category = plannerCategories.find(c => c.id === id);
       return {
         id,
         name: category ? category.name : '未分類',
         color: category ? category.color : '#B8AAB0',
         minutes,
-        percent: minutes / total * 100
+        percent: minutes / percentageTotal * 100
       };
     }).sort((a,b) => b.minutes - a.minutes);
     const bar = rows.map(row => `<div class="planner-ratio-segment" style="width:${row.percent}%;background:${row.color}"></div>`).join('');
@@ -2380,8 +2405,11 @@
       </div>
       <div class="planner-ratio-mini"><span style="width:${row.percent}%"></span></div>
     </div>`).join('');
+    const ratioNote = plannerCategorySettings.includeUncategorized
+      ? '百分比以今天已排入的全部色塊時間為 100%，包含未分類；空白時段不計入。'
+      : `百分比只計算已分類色塊，共 ${plannerMinutesText(percentageTotal)}${uncategorizedMinutes ? `；另有 ${plannerMinutesText(uncategorizedMinutes)} 未分類時間已排除` : ''}。`;
     wrap.innerHTML = `<div class="planner-ratio-head"><strong>今日時間使用比例</strong><div class="planner-ratio-meta"><span class="planner-ratio-total">共安排 ${plannerMinutesText(total)}</span><button class="planner-ratio-manage" type="button">調整分類</button></div></div>
-      <div class="planner-ratio-note">百分比以今天已排入的色塊時間為 100%，空白時段不計入。</div>
+      <div class="planner-ratio-note">${ratioNote}</div>
       <div class="planner-ratio-bar">${bar}</div><div class="planner-ratio-list">${list}</div>`;
     wrap.querySelector('.planner-ratio-manage').addEventListener('click', openPlannerCategoryManager);
   }
@@ -2750,16 +2778,18 @@
   const plannerCategoryOverlay = document.getElementById('plannerCategoryModalOverlay');
   const plannerCategoryName = document.getElementById('plannerCategoryName');
   const plannerCategoryColor = document.getElementById('plannerCategoryColor');
+  const plannerIncludeUncategorized = document.getElementById('plannerIncludeUncategorized');
 
   function renderPlannerCategoryManager(){
     const categoryList = document.getElementById('plannerCategoryList');
     const assignments = document.getElementById('plannerCategoryAssignments');
+    plannerIncludeUncategorized.checked = plannerCategorySettings.includeUncategorized;
     categoryList.innerHTML = plannerCategories.length ? plannerCategories.map(category => `
       <div class="category-pill">
         <span class="planner-ratio-dot" style="background:${category.color}"></span>
         <span>${escapeHtml(category.name)}</span>
         <button data-category-delete="${category.id}" title="刪除分類">×</button>
-      </div>`).join('') : '<div class="field-hint">尚未新增分類；目前所有時間會計入「未分類」。</div>';
+      </div>`).join('') : '<div class="field-hint">尚未新增分類；請先新增至少一個分類，再替素材指定分類。</div>';
 
     const options = `<option value="">未分類</option>` + plannerCategories.map(category =>
       `<option value="${category.id}">${escapeHtml(category.name)}</option>`
@@ -2823,6 +2853,11 @@
 
   document.getElementById('plannerManageCategoriesBtn').addEventListener('click', openPlannerCategoryManager);
   document.getElementById('plannerCategoryAddBtn').addEventListener('click', addPlannerCategory);
+  plannerIncludeUncategorized.addEventListener('change', async () => {
+    plannerCategorySettings.includeUncategorized = plannerIncludeUncategorized.checked;
+    await savePlannerCategorySettings();
+    renderPlannerRatio();
+  });
   plannerCategoryName.addEventListener('keydown', e => {
     if(e.key === 'Enter'){ e.preventDefault(); addPlannerCategory(); }
   });
